@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import io, { Socket } from "socket.io-client";
 
+import type { EChartsOption } from "echarts";
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
 /* ----------------------------- Types & Helpers ----------------------------- */
@@ -257,8 +258,8 @@ export default function Page() {
       setTelemetry(prev => {
         const last = prev[prev.length - 1];
         let ph = last.pH + (Math.random() - 0.5) * 0.08;
-        let temp = last.temp_c + (Math.random() - 0.5) * 0.4;
-        let dox = last.do_mg_l + (Math.random() - 0.5) * 0.2;
+        const temp = last.temp_c + (Math.random() - 0.5) * 0.4;
+        const dox = last.do_mg_l + (Math.random() - 0.5) * 0.2;
         if (Math.random() < 0.05) ph += (Math.random() < 0.5 ? -1 : 1) * (0.8 + Math.random() * 1.2);
         const next: Telemetry = {
           timestamp: nowISO(),
@@ -288,7 +289,7 @@ export default function Page() {
   const history = telemetry.slice(-pointsCount);
 
   /* ------------------------------- Chart (ECharts) ------------------------------ */
-  const chartOption = useMemo(() => {
+  const chartOption = useMemo<EChartsOption>(() => {
     return {
       grid: { top: 28, left: 40, right: 16, bottom: 28 },
       tooltip: { trigger: "axis" },
@@ -422,7 +423,7 @@ export default function Page() {
               <div className="flex items-center gap-2">
                 <select
                   value={range}
-                  onChange={(e) => setRange(e.target.value as any)}
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) => setRange(e.target.value as "24h" | "1w" | "1m")}
                   className="text-sm p-1 rounded border"
                 >
                   <option value="24h">24h</option>
@@ -433,7 +434,7 @@ export default function Page() {
             </div>
 
             <div className="w-full h-64 bg-slate-50 rounded-lg p-3 border border-slate-100">
-              <ReactECharts option={chartOption as any} style={{ height: "100%", width: "100%" }} />
+              <ReactECharts option={chartOption} style={{ height: "100%", width: "100%" }} />
             </div>
             <div className="text-xs text-slate-500">Default window shows ~1 week (latest {pointsCount} samples).</div>
           </div>
