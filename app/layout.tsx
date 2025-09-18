@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
+import { Background } from "@/app/components/Background";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +23,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <main className="min-h-screen p-6 font-sans text-slate-900">{children}</main>
+        <Background />
+        <main className="min-h-screen p-6 font-sans text-slate-100">{children}</main>
       </body>
     </html>
   );

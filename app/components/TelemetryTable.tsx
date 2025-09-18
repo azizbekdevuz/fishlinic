@@ -7,9 +7,9 @@ import { formatDateTime } from "@/app/lib/format";
 export function TelemetryTable({ rows }: { rows: Telemetry[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full table-auto">
+      <table className="w-full table-auto text-slate-200">
         <thead>
-          <tr className="text-left text-slate-500 text-sm border-b">
+          <tr className="text-left text-slate-300 text-sm border-b border-white/10">
             <th className="py-2">Timestamp</th>
             <th className="py-2">pH</th>
             <th className="py-2">Temp (°C)</th>
@@ -23,19 +23,19 @@ export function TelemetryTable({ rows }: { rows: Telemetry[] }) {
           {rows.map((r, idx) => {
             const s = statusForReading(r);
             return (
-              <tr key={idx} className="text-sm border-b last:border-b-0 hover:bg-slate-50">
+              <tr key={idx} className="text-sm border-b border-white/5 last:border-b-0 hover:bg-white/[0.03]">
                 <td className="py-3 align-top" suppressHydrationWarning>{formatDateTime(r.timestamp)}</td>
                 <td className="py-3 align-top"><span className={highlightClassForStatus(severityForValue("pH", r.pH))}>{r.pH.toFixed(2)}</span></td>
                 <td className="py-3 align-top"><span className={highlightClassForStatus(severityForValue("temp_c", r.temp_c))}>{r.temp_c.toFixed(1)}</span></td>
                 <td className="py-3 align-top"><span className={highlightClassForStatus(severityForValue("do_mg_l", r.do_mg_l))}>{r.do_mg_l.toFixed(2)}</span></td>
                 <td className="py-3 align-top">
-                  <div className="text-xs text-slate-600">
+                  <div className="text-xs text-slate-400">
                     pH {targetText("pH")} · Temp {targetText("temp_c")} · DO {targetText("do_mg_l")}
                   </div>
                 </td>
                 <td className="py-3 align-top"><StatusChip status={s} /></td>
                 <td className="py-3 align-top">
-                  <button className="text-sm text-sky-600 font-medium hover:underline">Acknowledge</button>
+                  <button className="text-sm text-sky-300 font-medium hover:underline">Acknowledge</button>
                 </td>
               </tr>
             );

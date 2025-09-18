@@ -3,6 +3,38 @@
 @tailwind utilities;
 
 html, body, #__next { height: 100%; }
-body { background: #f8fafc; }
+body { background: #0b1220; color: #e5e7eb; }
 
-.card { @apply bg-white rounded-2xl p-4 shadow-sm; }
+.card { @apply rounded-2xl p-4 shadow-sm; }
+
+/* --- Site-wide background (performant, CSS-only) --- */
+.site-bg { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
+.site-bg__gradient {
+  position: absolute; inset: -10% -10% 0 -10%;
+  background: radial-gradient(60% 60% at 10% 10%, rgba(59,130,246,.25), transparent 55%),
+              radial-gradient(50% 50% at 90% 20%, rgba(236,72,153,.20), transparent 55%),
+              radial-gradient(40% 45% at 50% 100%, rgba(16,185,129,.20), transparent 60%);
+  filter: blur(60px);
+  animation: bg-move 24s linear infinite alternate;
+}
+.site-bg__grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px;
+  mask-image: radial-gradient(80% 80% at 50% 40%, rgba(0,0,0,0.9), rgba(0,0,0,0));
+}
+/* Pointer-reactive radial glow */
+.site-bg__pointer {
+  position: absolute; inset: 0;
+  background: radial-gradient(300px 300px at var(--mx, 50%) var(--my, 50%), rgba(59,130,246,.15), rgba(59,130,246,0) 60%),
+              radial-gradient(220px 220px at calc(var(--mx, 50%) + 120px) calc(var(--my, 50%) + 60px), rgba(236,72,153,.12), rgba(236,72,153,0) 60%);
+  transition: background 160ms linear;
+}
+@keyframes bg-move {
+  0% { transform: translate3d(0, -2%, 0) scale(1.0); }
+  100% { transform: translate3d(0, 2%, 0) scale(1.05); }
+}
+
+/* Glassy card refinement */
+.card { background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(248,250,252,0.10)); box-shadow: 0 1px 0 rgba(15,23,42,0.20), 0 10px 40px rgba(2,6,23,0.35), inset 0 0 0 1px rgba(255,255,255,0.12); backdrop-filter: saturate(170%) blur(10px); }

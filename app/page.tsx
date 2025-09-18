@@ -33,18 +33,18 @@ export default function Page() {
   const tableRows = telemetry.slice(-12).reverse();
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen p-6">
       <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Capstone Water Quality Dashboard</h1>
-        <div className="text-sm text-slate-600">{socketConnected ? "Live: connected" : "Live: mock data"}</div>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-100">Capstone Water Quality Dashboard</h1>
+        <div className="text-sm text-slate-300">{socketConnected ? "Live: connected" : "Live: mock data"}</div>
       </header>
 
       <main className="grid grid-cols-12 gap-6">
         <section className="col-span-7">
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-medium">Realtime Water Quality</h2>
-              <div className="text-sm text-slate-500" suppressHydrationWarning>Last update: {formatDateTime(latest.timestamp)}</div>
+              <h2 className="text-lg font-medium text-slate-100">Realtime Water Quality</h2>
+              <div className="text-sm text-slate-300" suppressHydrationWarning>Last update: {formatDateTime(latest.timestamp)}</div>
             </div>
 
             <div className="flex gap-6 items-start">
@@ -63,12 +63,12 @@ export default function Page() {
         <section className="col-span-5">
           <div className="card flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium">Overall Statistics</h2>
-              <div className="flex items-center gap-2">
+              <h2 className="text-lg font-medium text-slate-100">Overall Statistics</h2>
+              <div className="flex items-center gap-2 text-slate-300">
                 <select
                   value={range}
                   onChange={(e: ChangeEvent<HTMLSelectElement>) => setRange(e.target.value as "24h" | "1w" | "1m")}
-                  className="text-sm p-1 rounded border"
+                  className="text-sm p-1 rounded border "
                 >
                   <option value="24h">24h</option>
                   <option value="1w">1w</option>
@@ -76,18 +76,18 @@ export default function Page() {
                 </select>
               </div>
             </div>
-            <div className="w-full h-64 bg-slate-50 rounded-lg p-3 border border-slate-100">
+            <div className="w-full h-64 rounded-lg p-3 border border-white/15 bg-white/10 backdrop-blur">
               <TelemetryChart history={history} />
             </div>
-            <div className="text-xs text-slate-500">Default window shows ~1 week (latest {pointsCount} samples).</div>
+            <div className="text-xs text-slate-400">Default window shows ~1 week (latest {pointsCount} samples).</div>
           </div>
         </section>
 
         <section className="col-span-12">
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-medium">Realtime Timetable</h2>
-              <div className="text-sm text-slate-500">Latest {tableRows.length} samples</div>
+              <h2 className="text-lg font-medium text-slate-100">Realtime Timetable</h2>
+              <div className="text-sm text-slate-400">Latest {tableRows.length} samples</div>
             </div>
             <TelemetryTable rows={tableRows} />
           </div>

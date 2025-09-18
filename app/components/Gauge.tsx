@@ -35,7 +35,7 @@ export function Gauge({
     glow: status === "good" ? "transparent" : status === "average" ? "rgba(250, 204, 21, .35)" : "rgba(239, 68, 68, .45)"
   };
 
-  const valueFill = status === "good" ? "#0F172A" : status === "average" ? "#CA8A04" : "#B91C1C";
+  const valueFill = status === "good" ? "#E5E7EB" : status === "average" ? "#FDE68A" : "#FCA5A5";
 
   return (
     <div className="relative w-full flex flex-col items-center">
@@ -43,9 +43,10 @@ export function Gauge({
         className="w-full rounded-3xl p-5"
         style={{
           background:
-            "linear-gradient(180deg, rgba(255,255,255,0.75), rgba(248,250,252,0.85))",
+            "linear-gradient(180deg, rgba(255,255,255,0.10), rgba(248,250,252,0.12))",
           boxShadow:
-            "0 1px 0 rgba(15,23,42,0.04), 0 8px 30px rgba(2,6,23,0.06), inset 0 0 0 1px rgba(148,163,184,0.15)"
+            "0 1px 0 rgba(255,255,255,0.10), 0 10px 40px rgba(2,6,23,0.35), inset 0 0 0 1px rgba(255,255,255,0.12)",
+          backdropFilter: "saturate(170%) blur(8px)"
         }}
       >
         <svg width={size} height={size / 1.35} viewBox={`0 0 ${size} ${size / 1.35}`}>
