@@ -17,6 +17,14 @@
 /.next/
 /out/
 
+# IDE 
+.vscode/
+.idea/
+.cursor/
+
+# data
+/mock-server/data/
+
 # production
 /build
 
