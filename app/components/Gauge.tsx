@@ -5,15 +5,25 @@ import { Status } from "@/app/lib/types";
 export function Gauge({
   value,
   status,
-  label = "meter (1 - 10)"
+  label = "meter (1 - 10)",
+  min = 1,
+  max = 10,
+  decimals = 1
 }: {
   value: number;
   status: Status;
   label?: string;
+  min?: number;
+  max?: number;
+  decimals?: number;
 }) {
-  const min = 1, max = 10;
-  const ratio = (value - min) / (max - min);
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) ? max : 10;
+  const span = Math.max(1e-6, safeMax - safeMin);
+  const rawRatio = (value - safeMin) / span;
+  const ratio = Math.max(0, Math.min(1, rawRatio));
   const angle = -90 + ratio * 180;
+  // Responsive sizing: base on container width via viewBox; fixed geometry for math
   const size = 300;
   const cx = size / 2;
   const cy = size / 2 + 12;
@@ -49,7 +59,7 @@ export function Gauge({
           backdropFilter: "saturate(170%) blur(8px)"
         }}
       >
-        <svg width={size} height={size / 1.35} viewBox={`0 0 ${size} ${size / 1.35}`}>
+        <svg className="w-full h-auto" viewBox={`0 0 ${size} ${size / 1.35}`} preserveAspectRatio="xMidYMid meet">
           <path d={arc(-90, 90)} stroke="#EEF2F7" strokeWidth={18} fill="none" strokeLinecap="round" />
           <path
             d={arc(-90, 90)}
@@ -76,10 +86,10 @@ export function Gauge({
           <circle cx={cx} cy={cy} r={15} fill="white" opacity={0.85} />
           <circle cx={cx} cy={cy} r={6} fill="#0F172A" />
           <text x={cx} y={cy + 50} fontSize={34} fontWeight={800} textAnchor="middle" fill={valueFill}>
-            {value.toFixed(1)}
+            {Number.isFinite(value) ? value.toFixed(decimals) : "–"}
           </text>
           <text x={cx} y={cy + 70} fontSize={12} textAnchor="middle" fill="#64748B">
-            {label}
+            {label} {`(${safeMin} – ${safeMax})`}
           </text>
         </svg>
       </div>
