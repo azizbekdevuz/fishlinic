@@ -11,9 +11,9 @@ body { background: #0b1220; color: #e5e7eb; }
 .site-bg { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
 .site-bg__gradient {
   position: absolute; inset: -10% -10% 0 -10%;
-  background: radial-gradient(60% 60% at 10% 10%, rgba(59,130,246,.25), transparent 55%),
-              radial-gradient(50% 50% at 90% 20%, rgba(236,72,153,.20), transparent 55%),
-              radial-gradient(40% 45% at 50% 100%, rgba(16,185,129,.20), transparent 60%);
+  background: radial-gradient(60% 60% at calc(10% + var(--dx,0)) calc(10% + var(--dy,0)), rgba(59,130,246,.25), transparent 55%),
+              radial-gradient(50% 50% at calc(90% - var(--dx,0)) calc(20% + var(--dy,0)), rgba(236,72,153,.20), transparent 55%),
+              radial-gradient(40% 45% at 50% calc(100% - var(--dy,0)), rgba(16,185,129,.20), transparent 60%);
   filter: blur(60px);
   animation: bg-move 24s linear infinite alternate;
 }
@@ -31,6 +31,15 @@ body { background: #0b1220; color: #e5e7eb; }
               radial-gradient(220px 220px at calc(var(--mx, 50%) + 120px) calc(var(--my, 50%) + 60px), rgba(236,72,153,.12), rgba(236,72,153,0) 60%);
   transition: background 160ms linear;
 }
+/* Smooth, GPU-friendly particle shimmer (no DOM nodes) */
+.site-bg__particles {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(2px 2px at calc(10% + var(--dx,0)) calc(30% + var(--dy,0)), rgba(255,255,255,0.08), transparent 60%),
+    radial-gradient(1.5px 1.5px at calc(60% - var(--dx,0)) calc(70% - var(--dy,0)), rgba(255,255,255,0.06), transparent 60%),
+    radial-gradient(1.8px 1.8px at calc(85% + var(--dx,0)) calc(55% + var(--dy,0)), rgba(255,255,255,0.05), transparent 60%);
+  pointer-events: none;
+}
 @keyframes bg-move {
   0% { transform: translate3d(0, -2%, 0) scale(1.0); }
   100% { transform: translate3d(0, 2%, 0) scale(1.05); }
@@ -38,3 +47,24 @@ body { background: #0b1220; color: #e5e7eb; }
 
 /* Glassy card refinement */
 .card { background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(248,250,252,0.10)); box-shadow: 0 1px 0 rgba(15,23,42,0.20), 0 10px 40px rgba(2,6,23,0.35), inset 0 0 0 1px rgba(255,255,255,0.12); backdrop-filter: saturate(170%) blur(10px); }
+
+/* --- Light theme overrides --- */
+.theme-light body { background: #f7fafc; color: #0b1220; }
+.theme-light .card { background: #ffffff; box-shadow: 0 1px 0 rgba(0,0,0,0.06), 0 8px 30px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(0,0,0,0.04); }
+.theme-light .site-bg__grid { background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px); }
+.theme-light .site-bg__pointer { background: radial-gradient(300px 300px at var(--mx, 50%) var(--my, 50%), rgba(59,130,246,.10), rgba(59,130,246,0) 60%), radial-gradient(220px 220px at calc(var(--mx, 50%) + 120px) calc(var(--my, 50%) + 60px), rgba(236,72,153,.10), rgba(236,72,153,0) 60%); }
+.theme-light .site-bg__particles { background-image:
+  radial-gradient(2px 2px at calc(10% + var(--dx,0)) calc(30% + var(--dy,0)), rgba(0,0,0,0.08), transparent 60%),
+  radial-gradient(1.5px 1.5px at calc(60% - var(--dx,0)) calc(70% - var(--dy,0)), rgba(0,0,0,0.06), transparent 60%),
+  radial-gradient(1.8px 1.8px at calc(85% + var(--dx,0)) calc(55% + var(--dy,0)), rgba(0,0,0,0.05), transparent 60%);
+}
+.theme-light .text-slate-100 { color: #0b1220; }
+.theme-light .text-slate-200 { color: #111827; }
+.theme-light .text-slate-300 { color: #374151; }
+.theme-light .text-slate-400 { color: #4b5563; }
+/* Escape sequences above are valid in Tailwind classes, but vanilla CSS parsers in IDEs flag them. */
+/* Replace with attribute-aware selectors to avoid CSS syntax errors while preserving effect. */
+.theme-light [class*="border-white/15"] { border-color: rgba(0,0,0,0.12) !important; }
+.theme-light [class*="border-white/10"] { border-color: rgba(0,0,0,0.08) !important; }
+.theme-light [class*="bg-white/10"] { background-color: rgba(0,0,0,0.03) !important; }
+.theme-light [class*="hover:bg-white/"]:hover { background-color: rgba(0,0,0,0.04) !important; }
