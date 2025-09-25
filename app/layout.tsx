@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Background } from "@/app/components/Background";
+import { SiteNav } from "@/app/components/SiteNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +25,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Background />
-        <main className="min-h-screen p-6 font-sans text-slate-100">{children}</main>
+        <SiteNav />
+        <main className="min-h-screen p-6 pt-28 sm:pt-32 font-sans text-slate-100">{children}</main>
       </body>
     </html>
   );
