@@ -1,21 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
-export function SafeImage({ src, alt, className, fallback = "/next.svg" }: { src: string; alt: string; className?: string; fallback?: string; }) {
+type Props = {
+  src: string;
+  alt: string;
+  className?: string; // applied to wrapper; can include width/height utilities
+  fallback?: string;
+  priority?: boolean;
+};
+
+export function SafeImage({ src, alt, className, fallback = "/next.svg", priority }: Props) {
   const [current, setCurrent] = useState(src);
   return (
-    <img
-      src={current}
-      alt={alt}
-      className={className}
-      onError={() => {
-        if (current !== fallback) setCurrent(fallback);
-      }}
-      loading="lazy"
-      decoding="async"
-    />
+    <div className={(className ? className + " " : "") + "relative overflow-hidden"}>
+      <Image
+        src={current}
+        alt={alt}
+        fill
+        className="object-cover"
+        sizes="(max-width: 640px) 100vw, 33vw"
+        onError={() => {
+          if (current !== fallback) setCurrent(fallback);
+        }}
+        priority={priority}
+      />
+    </div>
   );
 }
-
-
