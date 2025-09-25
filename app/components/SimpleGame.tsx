@@ -31,13 +31,14 @@ export function SimpleGame() {
     const keys: Record<string, boolean> = {};
     const onDown = (e: KeyboardEvent) => { keys[e.key] = true; };
     const onUp = (e: KeyboardEvent) => { keys[e.key] = false; };
-    window.addEventListener("keydown", (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       // prevent page scroll on arrows/WASD while game is mounted
       if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d","W","A","S","D"].includes(e.key)) {
         e.preventDefault();
       }
       onDown(e);
-    }, { passive: false });
+    };
+    window.addEventListener("keydown", handleKeyDown, { passive: false });
     window.addEventListener("keyup", onUp);
 
     // Game state
@@ -77,7 +78,8 @@ export function SimpleGame() {
     canvas.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
 
-    function step(dt: number) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    function step(_dt: number) {
       if (over) return;
       const accel = 0.35, drag = 0.9, maxv = 4.2;
       if (keys["ArrowUp"]) player.vy -= accel;
@@ -225,7 +227,7 @@ export function SimpleGame() {
     return () => {
       if (raf) cancelAnimationFrame(raf);
       ro.disconnect();
-      window.removeEventListener("keydown", onDown as any);
+      window.removeEventListener("keydown", handleKeyDown);
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
@@ -235,7 +237,7 @@ export function SimpleGame() {
 
   return (
     <div className="rounded-xl border border-white/10 p-2 w-full" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(248,250,252,0.06))", backdropFilter: "saturate(140%) blur(6px)" }}>
-      <canvas ref={canvasRef} style={{ width: "100%", display: "block", touchAction: "none" as any }} />
+      <canvas ref={canvasRef} style={{ width: "100%", display: "block", touchAction: "none" as React.CSSProperties["touchAction"] }} />
     </div>
   );
 }
