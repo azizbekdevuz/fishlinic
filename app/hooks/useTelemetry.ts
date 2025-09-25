@@ -13,26 +13,10 @@ export type UseTelemetryOptions = {
 
 export function useTelemetry(options?: UseTelemetryOptions) {
   const bufferSize = options?.bufferSize ?? 200;
-  const [telemetry, setTelemetry] = useState<Telemetry[]>(() => {
-    const base: Telemetry[] = [];
-    const baseTime = Date.UTC(2025, 0, 1, 0, 0, 0, 0);
-    for (let i = 0; i < 40; i++) {
-      const ph = 7.2 + 0.12 * Math.sin(i * 0.7);
-      const temp = 25.0 + 0.6 * Math.sin(i * 0.35 + 1);
-      const dox = 6.2 + 0.24 * Math.sin(i * 0.5 + 2);
-      const fish = Math.round(80 + 5 * (1 + Math.sin(i * 0.4 + 3)));
-      base.push({
-        timestamp: new Date(baseTime + i * 60 * 60 * 1000).toISOString(),
-        pH: +ph.toFixed(2),
-        temp_c: +temp.toFixed(2),
-        do_mg_l: +dox.toFixed(2),
-        fish_health: fish
-      });
-    }
-    return base;
-  });
+  const [telemetry, setTelemetry] = useState<Telemetry[]>([]);
 
   const [socketConnected, setSocketConnected] = useState(false);
+  const [serialConnected, setSerialConnected] = useState<boolean | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
   // Socket.IO live stream
@@ -42,14 +26,18 @@ export function useTelemetry(options?: UseTelemetryOptions) {
 
     const { socket, disconnect } = connectTelemetrySocket(wsUrl, {
       transports: ["websocket"],
-      reconnectionAttempts: 5
+      reconnectionAttempts: 8
     });
     socketRef.current = socket;
 
     socket.on("connect", () => setSocketConnected(true));
     socket.on("disconnect", () => setSocketConnected(false));
+    socket.on("connect_error", () => setSocketConnected(false));
+    socket.on("reconnect", () => setSocketConnected(true));
+    socket.on("reconnect_attempt", () => setSocketConnected(false));
     socket.on("telemetry", (payload: Telemetry) => setTelemetry(prev => [...prev.slice(-(bufferSize - 1)), payload]));
     socket.on("telemetry:update", (payload: Telemetry) => setTelemetry(prev => [...prev.slice(-(bufferSize - 1)), payload]));
+    socket.on("serial:status", (s: { status: "connected" | "disconnected" }) => setSerialConnected(s.status === "connected"));
 
     return () => {
       disconnect();
@@ -57,7 +45,23 @@ export function useTelemetry(options?: UseTelemetryOptions) {
     };
   }, [bufferSize]);
 
-  // Mock updates when no WS URL
+  // Fetch history on mount (true 24h default)
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadHistory() {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_WS_URL?.replace(/\/$/, "") || "http://localhost:4000";
+        const res = await fetch(`${baseUrl}/history?range=24h&max=5000`, { signal: controller.signal });
+        if (!res.ok) return;
+        const data: Telemetry[] = await res.json();
+        setTelemetry(data.slice(-bufferSize));
+      } catch {}
+    }
+    loadHistory();
+    return () => controller.abort();
+  }, [bufferSize]);
+
+  // Mock updates when no WS URL (dev only)
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_WS_URL) return;
     const id = setInterval(() => {
@@ -82,7 +86,7 @@ export function useTelemetry(options?: UseTelemetryOptions) {
 
   const latest = telemetry[telemetry.length - 1];
 
-  return { telemetry, latest, socketConnected } as const;
+  return { telemetry, latest, socketConnected, serialConnected } as const;
 }
 
 
