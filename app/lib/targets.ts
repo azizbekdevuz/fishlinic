@@ -9,5 +9,3 @@ export function targetText(metric: keyof typeof TARGETS): string {
   if (metric === "do_mg_l") return `≥ ${g[0]} mg/L`;
   return `${g[0]} – ${g[1]}${metric === "temp_c" ? " °C" : ""}`;
 }
-
-
