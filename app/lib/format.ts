@@ -1,5 +1,5 @@
 const DEFAULT_LOCALE = "en-GB";
-const DEFAULT_TIME_ZONE = "UTC";
+const DEFAULT_TIME_ZONE = "Asia/Seoul";
 
 const dateTimeFormatter = new Intl.DateTimeFormat(DEFAULT_LOCALE, {
   dateStyle: "short",
