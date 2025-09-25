@@ -11,5 +11,3 @@ export type Telemetry = {
 export type Status = "good" | "average" | "alert";
 
 export type MetricField = keyof Pick<Telemetry, "pH" | "temp_c" | "do_mg_l">;
-
-

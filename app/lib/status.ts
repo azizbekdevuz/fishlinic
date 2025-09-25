@@ -46,8 +46,12 @@ export function computeOverallScore(t: Telemetry) {
     return Math.max(0, 1 - Math.abs(t.temp_c - center) / gap);
   })();
   const doScore = (() => {
-    const ideal = 6, gap = 3;
-    return Math.max(0, 1 - Math.abs(t.do_mg_l - ideal) / gap);
+    const ideal = 7; // moderate target for many species
+    const gapBelow = 4; // heavier penalty below ideal
+    const gapAbove = 8; // softer penalty above ideal (saturation effects)
+    const delta = t.do_mg_l - ideal;
+    const gap = delta < 0 ? gapBelow : gapAbove;
+    return Math.max(0, 1 - Math.abs(delta) / gap);
   })();
   const fishScore = clamp((t.fish_health ?? 80) / 100, 0, 1);
 
