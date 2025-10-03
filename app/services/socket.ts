@@ -12,7 +12,8 @@ export function connectTelemetrySocket(url: string, options?: {
   reconnectionAttempts?: number;
 }): SocketConnection {
   const socket = io(url, {
-    transports: options?.transports ?? ["websocket"],
+    // Allow both websocket and polling so proxies/tunnels work reliably
+    transports: options?.transports ?? ["websocket", "polling"],
     reconnectionAttempts: options?.reconnectionAttempts ?? 5
   });
   return {

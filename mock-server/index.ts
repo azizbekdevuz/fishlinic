@@ -14,6 +14,7 @@ dotenv.config();
 const PORT = Number(process.env.PORT) || 4000;
 const SERIAL_PATH = process.env.SERIAL_PATH || "auto";
 const SERIAL_BAUD = Number(process.env.SERIAL_BAUD || 9600);
+const AI_BASE_URL = process.env.AI_BASE_URL || "http://localhost:8000";
 
 const app = express();
 const server = http.createServer(app);
@@ -239,15 +240,33 @@ async function startSerialLoop() {
     serialPort = await openSerial();
     emitSerialStatus("connected");
     const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
-    parser.on("data", (line: string) => {
+    parser.on("data", async (line: string) => {
       try {
         const parsed: unknown = JSON.parse(line);
         const t = normalize(parsed);
         if (!t) return;
-        io.emit("telemetry", t);
-        io.emit("telemetry:update", t);
-        appendTelemetry(t);
-        console.log("→", t);
+        let enriched: Telemetry = t;
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 600);
+          const res = await fetch(`${AI_BASE_URL}/predict`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pH: t.pH, temp_c: t.temp_c, do_mg_l: t.do_mg_l }),
+            signal: controller.signal as any
+          } as any);
+          clearTimeout(timeout);
+          if (res.ok) {
+            const data = await res.json();
+            const quality_ai = typeof data?.quality_ai === "number" ? data.quality_ai : undefined;
+            const status_ai = typeof data?.status_ai === "string" ? data.status_ai : undefined;
+            enriched = { ...t, ...(quality_ai !== undefined ? { quality_ai } : {}), ...(status_ai ? { status_ai } : {}) };
+          }
+        } catch {}
+        io.emit("telemetry", enriched);
+        io.emit("telemetry:update", enriched);
+        appendTelemetry(enriched);
+        console.log("→", enriched);
       } catch {}
     });
     serialPort.on("error", (e) => {

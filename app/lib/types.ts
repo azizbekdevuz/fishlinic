@@ -6,6 +6,9 @@ export type Telemetry = {
   temp_c: number;
   do_mg_l: number;
   fish_health?: number;
+  // AI-enriched (optional)
+  quality_ai?: number; // 1-10 score predicted by AI
+  status_ai?: Status;  // mapped status from AI (good|average|alert)
 };
 
 export type Status = "good" | "average" | "alert";

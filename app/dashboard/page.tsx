@@ -20,13 +20,13 @@ export default function DashboardPage() {
   const [metric, setMetric] = useState<MetricKey>("overall");
   const [range, setRange] = useState<"24h" | "1w" | "1m">("1w");
 
-  const status = latest ? statusForReading(latest) : "good";
+  const status = latest ? (latest.status_ai ?? statusForReading(latest)) : "good";
 
   const gauge = useMemo(() => {
     if (!latest) return null;
     if (metric === "overall") {
       return {
-        value: computeOverallScore(latest),
+        value: latest.quality_ai ?? computeOverallScore(latest),
         min: 1,
         max: 10,
         decimals: 1,
