@@ -25,6 +25,12 @@ export function CameraPanel(props: CameraPanelProps) {
     return u.toString();
   }, [camUrl, nonce]);
 
+  useEffect(() => {
+    if (!effectiveSrc) return;
+    setIsError(null);
+    setIsLoading(true);
+  }, [effectiveSrc]);
+
   function reload() {
     setIsError(null);
     setIsLoading(true);
@@ -51,17 +57,42 @@ export function CameraPanel(props: CameraPanelProps) {
           Camera URL not configured. Set <code className="text-slate-100">NEXT_PUBLIC_CAM_URL</code> or pass <code className="text-slate-100">url</code>.
         </div>
       ) : (
-        <div className="w-full aspect-video overflow-hidden rounded-lg border border-white/15 bg-black/60 flex items-center justify-center">
-          {/* Using <img> for MJPEG streams. */}
-          <img
-            src={effectiveSrc}
-            alt="Live camera stream"
-            className="w-full h-full object-contain"
-            onLoad={() => { setIsLoading(false); setIsError(null); }}
-            onError={() => { setIsLoading(false); setIsError("Failed to load stream"); }}
-          />
-          {isLoading && (
-            <div className="absolute text-slate-300 text-sm">Loading…</div>
+        <div className="w-full aspect-video overflow-hidden rounded-lg border border-white/15 bg-black/60 flex items-center justify-center relative">
+          {isError ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
+              <div className="text-slate-100">Could not load camera stream</div>
+              <div className="text-xs text-slate-400">The camera server may be offline or blocking cross-origin requests.</div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={camUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs px-2 py-1 rounded border border-white/20 hover:bg-white/10 text-slate-100"
+                >
+                  Open stream in new tab
+                </a>
+                <button
+                  onClick={reload}
+                  className="text-xs px-2 py-1 rounded border border-white/20 hover:bg-white/10 text-slate-100"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Using <img> for MJPEG streams. */}
+              <img
+                src={effectiveSrc}
+                alt="Live camera stream"
+                className="w-full h-full object-contain"
+                onLoad={() => { setIsLoading(false); setIsError(null); }}
+                onError={() => { setIsLoading(false); setIsError("Failed to load stream"); }}
+              />
+              {isLoading && (
+                <div className="absolute text-slate-300 text-sm">Loading…</div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -71,7 +102,7 @@ export function CameraPanel(props: CameraPanelProps) {
       )}
 
       <div className="text-xs text-slate-400">
-        For external links/dev tunnels, whitelisting this origin and using HTTPS now.
+        For external links or dev tunnels, whitelisting this origin and using HTTPS now.
       </div>
     </div>
   );
