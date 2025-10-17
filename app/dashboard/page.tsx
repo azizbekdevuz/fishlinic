@@ -13,6 +13,7 @@ import { StatusCard } from "@/app/components/StatusCard";
 import { TelemetryTable } from "@/app/components/TelemetryTable";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { SimpleGame } from "@/app/components/SimpleGame";
+import { CameraPanel } from "../components/CameraPanel";
 
 export default function DashboardPage() {
   const { telemetry, latest, socketConnected, serialConnected } = useTelemetry();
@@ -164,6 +165,9 @@ export default function DashboardPage() {
             </div>
             <div className="text-xs text-slate-400">Default window shows ~1 week (latest {pointsCount} samples).
             </div>
+          </div>
+          <div className="mt-6">
+            <CameraPanel url={process.env.NEXT_PUBLIC_CAM_URL} title="Live Camera" />
           </div>
         </section>
 

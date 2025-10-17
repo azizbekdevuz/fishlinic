@@ -209,23 +209,58 @@ export function normalize(raw: unknown): Telemetry | null {
   return out;
 }
 
+// --- Utilities to inspect serial ports and improve Windows handling ---
+async function listSerialPorts(): Promise<Awaited<ReturnType<typeof SerialPort.list>>> {
+  try {
+    const ports = await SerialPort.list();
+    return ports;
+  } catch (e) {
+    console.error("[serial] list failed:", e instanceof Error ? e.message : String(e));
+    return [] as any;
+  }
+}
+
+function normalizeWindowsComPath(pathIn: string): string {
+  // For COM10+ Windows requires \\.\COM10 syntax. For COM1-9 regular 'COMx' works.
+  if (process.platform !== "win32") return pathIn;
+  const m = /^COM(\d+)$/i.exec(pathIn.trim());
+  if (!m) return pathIn;
+  const n = Number(m[1]);
+  if (Number.isFinite(n) && n >= 10) {
+    return `\\\\.\\COM${n}`;
+  }
+  return pathIn;
+}
+
+app.get("/ports", async (_req, res) => {
+  const ports = await listSerialPorts();
+  res.json(ports);
+});
+
 async function openSerial(): Promise<SerialPort> {
   if (SERIAL_PATH !== "auto") {
-    return new SerialPort({ path: SERIAL_PATH, baudRate: SERIAL_BAUD });
+    const chosen = normalizeWindowsComPath(SERIAL_PATH);
+    console.log("[serial] opening explicit port:", SERIAL_PATH, "=>", chosen, "@", SERIAL_BAUD);
+    return new SerialPort({ path: chosen, baudRate: SERIAL_BAUD });
   }
   // Auto-pick likely Arduino port
-  const ports = await SerialPort.list();
+  const ports = await listSerialPorts();
+  console.log("[serial] available ports:");
+  for (const p of ports) {
+    console.log("  -", p.path, JSON.stringify({ manufacturer: p.manufacturer, vendorId: p.vendorId, productId: p.productId }));
+  }
   const guess = ports.find((p) =>
-    /arduino|wch|usb|ch340|silabs|ftdi/i.test(
-      [p.manufacturer, p.vendorId, p.productId, p.path].join(" ")
+    /arduino|wch|usb|ch340|silabs|ftdi|usb-serial|uno|mega|nano/i.test(
+      [p.manufacturer, p.vendorId, p.productId, p.path, p.pnpId].filter(Boolean).join(" ")
     )
-  );
+  ) || ports[0];
   if (!guess)
     throw new Error(
       "No serial device found. Set SERIAL_PATH=COM3 or /dev/ttyACM0"
     );
-  console.log("[serial] auto-picked", guess.path);
-  return new SerialPort({ path: guess.path!, baudRate: SERIAL_BAUD });
+  const chosen = normalizeWindowsComPath(guess.path!);
+  console.log("[serial] auto-picked", guess.path, "=>", chosen);
+  return new SerialPort({ path: chosen, baudRate: SERIAL_BAUD });
 }
 
 let serialPort: SerialPort | null = null;
@@ -280,6 +315,7 @@ async function startSerialLoop() {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[serial] open failed:", msg);
+    console.error("[serial] hints: ensure Arduino Serial Monitor is CLOSED, correct COMx, and baud=", SERIAL_BAUD);
     emitSerialStatus("disconnected");
     scheduleRetry();
   }
@@ -292,6 +328,12 @@ function scheduleRetry() {
     startSerialLoop();
   }, 10000);
 }
+
+// Log ports on startup for easier debugging
+listSerialPorts().then((ports) => {
+  if (!ports.length) console.warn("[serial] no ports detected");
+  else console.log("[serial] detected", ports.length, "ports");
+});
 
 startSerialLoop();
 
