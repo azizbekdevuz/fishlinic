@@ -120,6 +120,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+          
         ) : (
           <>
         <section className="lg:col-span-7">

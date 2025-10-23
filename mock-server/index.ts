@@ -237,6 +237,161 @@ app.get("/ports", async (_req, res) => {
   res.json(ports);
 });
 
+// Live data endpoint for external access
+let latestTelemetry: Telemetry | null = null;
+const telemetryBuffer: Telemetry[] = [];
+const MAX_BUFFER_SIZE = 200; // Optimal for capstone project
+
+// Mock data generation for testing without hardware
+let mockDataInterval: NodeJS.Timeout | null = null;
+let isMockMode = false;
+
+function generateMockTelemetry(): Telemetry {
+  const now = new Date();
+  const baseTime = now.getTime();
+  
+  // Generate realistic water quality data with some variation
+  const basePH = 7.2;
+  const baseTemp = 25.0;
+  const baseDO = 6.5;
+  
+  // Add some realistic variation
+  const phVariation = (Math.random() - 0.5) * 0.3; // ±0.15 pH
+  const tempVariation = (Math.random() - 0.5) * 2.0; // ±1°C
+  const doVariation = (Math.random() - 0.5) * 1.0; // ±0.5 mg/L
+  
+  // Occasional spikes for realism
+  const spikeChance = Math.random() < 0.05; // 5% chance
+  const phSpike = spikeChance ? (Math.random() < 0.5 ? -0.8 : 0.8) : 0;
+  const tempSpike = spikeChance ? (Math.random() < 0.5 ? -2.0 : 2.0) : 0;
+  
+  const pH = Math.max(0, Math.min(14, basePH + phVariation + phSpike));
+  const temp_c = Math.max(0, Math.min(40, baseTemp + tempVariation + tempSpike));
+  const do_mg_l = Math.max(0, Math.min(15, baseDO + doVariation));
+  const fish_health = Math.round(75 + (Math.random() - 0.5) * 20); // 65-85%
+  
+  return {
+    timestamp: now.toISOString(),
+    pH: Math.round(pH * 100) / 100,
+    temp_c: Math.round(temp_c * 10) / 10,
+    do_mg_l: Math.round(do_mg_l * 100) / 100,
+    fish_health: fish_health
+  };
+}
+
+async function enrichWithAI(telemetry: Telemetry): Promise<Telemetry> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 600);
+    const res = await fetch(`${AI_BASE_URL}/predict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pH: telemetry.pH, temp_c: telemetry.temp_c, do_mg_l: telemetry.do_mg_l }),
+      signal: controller.signal as any
+    } as any);
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      const quality_ai = typeof data?.quality_ai === "number" ? data.quality_ai : undefined;
+      const status_ai = typeof data?.status_ai === "string" ? data.status_ai : undefined;
+      return { ...telemetry, ...(quality_ai !== undefined ? { quality_ai } : {}), ...(status_ai ? { status_ai } : {}) };
+    }
+  } catch {}
+  return telemetry;
+}
+
+function startMockDataGeneration() {
+  if (mockDataInterval) return; // Already running
+  
+  console.log("[mock] Starting mock data generation for testing without hardware");
+  isMockMode = true;
+  
+  mockDataInterval = setInterval(async () => {
+    const mockTelemetry = generateMockTelemetry();
+    const enriched = await enrichWithAI(mockTelemetry);
+    
+    // Store for API access
+    latestTelemetry = enriched;
+    
+    // Add to buffer
+    telemetryBuffer.push(enriched);
+    if (telemetryBuffer.length > MAX_BUFFER_SIZE) {
+      telemetryBuffer.shift();
+    }
+    
+    // Emit to WebSocket clients
+    io.emit("telemetry", enriched);
+    io.emit("telemetry:update", enriched);
+    
+    // Save to file
+    appendTelemetry(enriched);
+    
+    console.log("[mock] →", enriched);
+  }, 3000); // Generate data every 3 seconds
+}
+
+function stopMockDataGeneration() {
+  if (mockDataInterval) {
+    clearInterval(mockDataInterval);
+    mockDataInterval = null;
+    isMockMode = false;
+    console.log("[mock] Stopped mock data generation");
+  }
+}
+
+app.get("/live", (_req, res) => {
+  if (!latestTelemetry) {
+    return res.status(404).json({ error: "No live data available" });
+  }
+  res.json({
+    timestamp: latestTelemetry.timestamp,
+    pH: latestTelemetry.pH,
+    temp_c: latestTelemetry.temp_c,
+    do_mg_l: latestTelemetry.do_mg_l,
+    fish_health: latestTelemetry.fish_health,
+    quality_ai: latestTelemetry.quality_ai,
+    status_ai: latestTelemetry.status_ai,
+    system_status: {
+      serial_connected: serialPort !== null,
+      mock_mode: isMockMode,
+      socket_connections: io.engine.clientsCount
+    }
+  });
+});
+
+// Latest N readings endpoint
+app.get("/latest", (req, res) => {
+  const limit = parseInt(req.query.n as string) || 10;
+  const maxLimit = Math.min(limit, MAX_BUFFER_SIZE);
+  
+  if (telemetryBuffer.length === 0) {
+    return res.status(404).json({ error: "No data available" });
+  }
+  
+  // Return the latest N readings from buffer
+  const latestReadings = telemetryBuffer.slice(-maxLimit);
+  res.json(latestReadings);
+});
+
+// Mock data control endpoints
+app.post("/mock/start", (_req, res) => {
+  startMockDataGeneration();
+  res.json({ message: "Mock data generation started", isMockMode });
+});
+
+app.post("/mock/stop", (_req, res) => {
+  stopMockDataGeneration();
+  res.json({ message: "Mock data generation stopped", isMockMode });
+});
+
+app.get("/mock/status", (_req, res) => {
+  res.json({ 
+    isMockMode, 
+    hasSerialConnection: serialPort !== null,
+    latestTelemetry: latestTelemetry ? "available" : "none"
+  });
+});
+
 async function openSerial(): Promise<SerialPort> {
   if (SERIAL_PATH !== "auto") {
     const chosen = normalizeWindowsComPath(SERIAL_PATH);
@@ -274,6 +429,7 @@ async function startSerialLoop() {
   try {
     serialPort = await openSerial();
     emitSerialStatus("connected");
+    stopMockDataGeneration(); // Stop mock data when real hardware connects
     const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
     parser.on("data", async (line: string) => {
       try {
@@ -298,6 +454,15 @@ async function startSerialLoop() {
             enriched = { ...t, ...(quality_ai !== undefined ? { quality_ai } : {}), ...(status_ai ? { status_ai } : {}) };
           }
         } catch {}
+        // Store latest telemetry for API access
+        latestTelemetry = enriched;
+        
+        // Add to buffer (keep only recent readings)
+        telemetryBuffer.push(enriched);
+        if (telemetryBuffer.length > MAX_BUFFER_SIZE) {
+          telemetryBuffer.shift(); // Remove oldest reading
+        }
+        
         io.emit("telemetry", enriched);
         io.emit("telemetry:update", enriched);
         appendTelemetry(enriched);
@@ -317,6 +482,11 @@ async function startSerialLoop() {
     console.error("[serial] open failed:", msg);
     console.error("[serial] hints: ensure Arduino Serial Monitor is CLOSED, correct COMx, and baud=", SERIAL_BAUD);
     emitSerialStatus("disconnected");
+    
+    // Start mock data generation when no hardware is available
+    console.log("[serial] No hardware detected, starting mock data generation");
+    startMockDataGeneration();
+    
     scheduleRetry();
   }
 }
