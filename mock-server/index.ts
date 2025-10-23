@@ -471,10 +471,21 @@ async function startSerialLoop() {
     });
     serialPort.on("error", (e) => {
       console.error("[serial] error:", e.message);
+      emitSerialStatus("disconnected");
+      if (!isMockMode)
+      {
+        console.log("[serial] starting mock data generation due to serial error");
+        startMockDataGeneration();
+      }
     });
     serialPort.on("close", () => {
       console.log("[serial] closed");
       emitSerialStatus("disconnected");
+      if (!isMockMode)
+      {
+        console.log("[serial] starting mock data generation due to serial error");
+        startMockDataGeneration();
+      }
       scheduleRetry();
     });
   } catch (e) {
