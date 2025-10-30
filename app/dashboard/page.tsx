@@ -75,14 +75,13 @@ export default function DashboardPage() {
     <div className="min-h-screen p-4 sm:p-6">
       <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-100">Capstone Water Quality Dashboard</h1>
-          <p className="text-xs text-slate-300">Developed by Sejong University Capstone Design students</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-strong hx hx-accent">Capstone Water Quality Dashboard</h1>
+          <p className="text-xs text-muted">Developed by Sejong University Capstone Design students</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-sm text-slate-300">
+          <div className="text-sm text-muted">
             {serialConnected === false ? "Live: disconnected" : socketConnected ? "Live: connected" : "Live: mock data"}
           </div>
-          <ThemeToggle />
         </div>
       </header>
 
@@ -90,10 +89,10 @@ export default function DashboardPage() {
         {serialConnected === false ? (
           <div className="lg:col-span-12">
             <div className="card p-6 text-center">
-              <div className="text-lg font-medium text-slate-100">System not connected</div>
-              <div className="text-slate-300 mt-1">USB/Serial disconnected. Waiting for reconnection…</div>
+              <div className="text-lg font-medium text-strong">System not connected</div>
+              <div className="text-muted mt-1">USB/Serial disconnected. Waiting for reconnection…</div>
               <div className="mt-4 hidden sm:block"><SimpleGame /></div>
-              <div className="mt-4 sm:hidden text-sm text-slate-300">
+              <div className="mt-4 sm:hidden text-sm text-muted">
                 Try reconnecting your device. Meanwhile, view tips and guidelines below:
                 <div className="mt-3 grid grid-cols-1 gap-2 text-left">
                   <div className="rounded-lg p-3 border border-white/10" style={{ background: "rgba(255,255,255,0.06)" }}>
@@ -112,10 +111,10 @@ export default function DashboardPage() {
         ) : !latest ? (
           <div className="lg:col-span-12">
             <div className="card p-6 text-center">
-              <div className="text-lg font-medium text-slate-100">Waiting for data…</div>
-              <div className="text-slate-300 mt-1">No samples received yet. The dashboard will populate automatically.</div>
+              <div className="text-lg font-medium text-strong">Waiting for data…</div>
+              <div className="text-muted mt-1">No samples received yet. The dashboard will populate automatically.</div>
               <div className="mt-4 hidden sm:block"><SimpleGame /></div>
-              <div className="mt-4 sm:hidden text-sm text-slate-300">
+              <div className="mt-4 sm:hidden text-sm text-muted">
                 Hang tight! If this takes long, verify the device and bridge are running.
               </div>
             </div>
@@ -126,8 +125,8 @@ export default function DashboardPage() {
         <section className="lg:col-span-7">
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-medium text-slate-100">Realtime Water Quality</h2>
-              <div className="text-sm text-slate-300" suppressHydrationWarning>Last update: {formatDateTime(latest.timestamp)}</div>
+              <h2 className="text-lg font-medium text-strong">Realtime Water Quality</h2>
+              <div className="text-sm text-muted" suppressHydrationWarning>Last update: {formatDateTime(latest.timestamp)}</div>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -148,8 +147,8 @@ export default function DashboardPage() {
         <section className="lg:col-span-5">
           <div className="card flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-slate-100">Overall Statistics</h2>
-              <div className="flex items-center gap-2 text-slate-300">
+              <h2 className="text-lg font-medium text-strong">Overall Statistics</h2>
+              <div className="flex items-center gap-2 text-muted">
                 <select
                   value={range}
                   onChange={(e: ChangeEvent<HTMLSelectElement>) => setRange(e.target.value as "24h" | "1w" | "1m")}
@@ -164,7 +163,7 @@ export default function DashboardPage() {
             <div className="w-full h-64 rounded-lg p-3 border border-white/15 bg-white/10 backdrop-blur">
               <TelemetryChart history={history} />
             </div>
-            <div className="text-xs text-slate-400">Default window shows ~1 week (latest {pointsCount} samples).
+            <div className="text-xs text-muted">Default window shows ~1 week (latest {pointsCount} samples).
             </div>
           </div>
           <div className="mt-6">
@@ -175,8 +174,8 @@ export default function DashboardPage() {
         <section className="lg:col-span-12">
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-medium text-slate-100">Realtime Timetable</h2>
-              <div className="text-sm text-slate-400">Latest {tableRows.length} samples</div>
+              <h2 className="text-lg font-medium text-strong">Realtime Timetable</h2>
+              <div className="text-sm text-muted">Latest {tableRows.length} samples</div>
             </div>
             <TelemetryTable rows={tableRows} />
           </div>
@@ -185,13 +184,13 @@ export default function DashboardPage() {
         )}
       </main>
 
-      <footer className="mt-6 text-xs text-slate-400 flex items-center justify-between flex-col sm:flex-row gap-3 sm:gap-2">
+      <footer className="mt-6 text-xs text-muted flex items-center justify-between flex-col sm:flex-row gap-3 sm:gap-2">
         <span className="text-center sm:text-left">Sejong University — Capstone Design Course</span>
-        <div className="flex items-center gap-3 text-slate-300">
-          <span className="text-slate-400">Dashboard by Azizbek Arzikulov</span>
-          <a href="https://github.com/azizbekdevuz/fishlinic" target="_blank" rel="noreferrer" className="hover:underline hover:text-slate-100">GitHub</a>
-          <a href="https://portfolio-next-silk-two.vercel.app/" target="_blank" rel="noreferrer" className="hover:underline hover:text-slate-100">Portfolio</a>
-          <a href="https://www.linkedin.com/in/azizbek-arzikulov" target="_blank" rel="noreferrer" className="hover:underline hover:text-slate-100">LinkedIn</a>
+        <div className="flex items-center gap-3 text-muted">
+          <span className="text-muted">Dashboard by Azizbek Arzikulov</span>
+          <a href="https://github.com/azizbekdevuz/fishlinic" target="_blank" rel="noreferrer" className="hover:underline hover:text-primary">GitHub</a>
+          <a href="https://portfolio-next-silk-two.vercel.app/" target="_blank" rel="noreferrer" className="hover:underline hover:text-primary">Portfolio</a>
+          <a href="https://www.linkedin.com/in/azizbek-arzikulov" target="_blank" rel="noreferrer" className="hover:underline hover:text-primary">LinkedIn</a>
         </div>
         <span className="text-center sm:text-right">© {new Date().getFullYear()} Team Fishlinic</span>
       </footer>

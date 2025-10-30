@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2017",
     "lib": [
-      "ES2023",
+      "esnext",
       "DOM",
       "DOM.Iterable"
     ],
-    "allowJs": false,
+    "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -36,6 +36,6 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules", "mock-server", "**/mock-server/**"
+    "node_modules", "**/mock-server/**"
   ]
 }

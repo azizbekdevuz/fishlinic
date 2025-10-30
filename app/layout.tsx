@@ -2,7 +2,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
-import { Background } from "@/app/components/Background";
 import { SiteNav } from "@/app/components/SiteNav";
 
 const geistSans = Geist({
@@ -24,9 +23,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Background />
         <SiteNav />
-        <main className="min-h-screen p-6 pt-28 sm:pt-32 font-sans text-slate-100">{children}</main>
+        <main className="min-h-screen p-6 pt-24 sm:pt-28 font-sans">{children}</main>
       </body>
     </html>
   );

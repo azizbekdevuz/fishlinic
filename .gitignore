@@ -82,3 +82,5 @@ venv.bak/
 ai-service/__pycache__/
 ai-service/*.pyc
 ai-service/.pytest_cache/
+
+virtual-assistant

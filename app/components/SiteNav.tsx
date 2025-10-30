@@ -6,11 +6,7 @@ import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { useEffect, useState } from "react";
 
 const links = [
-  { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/about", label: "About" },
-  { href: "/our-team", label: "Our Team" },
-  { href: "/contact", label: "Contact" },
 ] as const;
 
 export function SiteNav() {
@@ -24,14 +20,9 @@ export function SiteNav() {
     <div className="sticky top-0 z-40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div
-          className="mt-4 mb-2 rounded-2xl px-4 py-3 flex items-center justify-between"
-          style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.14), rgba(248,250,252,0.10))",
-            boxShadow: "0 1px 0 rgba(15,23,42,0.20), 0 10px 40px rgba(2,6,23,0.35), inset 0 0 0 1px rgba(255,255,255,0.12)",
-            backdropFilter: "saturate(170%) blur(10px)",
-          }}
+          className="mt-4 mb-2 rounded-2xl px-4 py-3 flex items-center justify-between border bg-[color:var(--card)]"
         >
-          <Link href="/" className="text-sm font-semibold tracking-tight text-slate-100">
+          <Link href="/dashboard" className="text-sm font-semibold tracking-tight hx hx-accent">
             Smart Aquaculture
           </Link>
 
@@ -44,8 +35,7 @@ export function SiteNav() {
                   key={l.href}
                   href={l.href}
                   className={
-                    "px-3 py-1.5 rounded-full text-sm font-medium transition " +
-                    (active ? "bg-sky-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200")
+                    "btn " + (active ? "btn-primary" : "")
                   }
                 >
                   {l.label}
@@ -59,7 +49,7 @@ export function SiteNav() {
 
           {/* Mobile button */}
           <button
-            className="sm:hidden px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-700"
+            className="sm:hidden btn"
             aria-label="Toggle navigation"
             aria-expanded={open}
             onClick={() => setOpen(!open)}
@@ -71,12 +61,7 @@ export function SiteNav() {
         {/* Mobile panel */}
         {open && (
           <div
-            className="sm:hidden mb-4 rounded-2xl px-4 py-3"
-            style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,0.14), rgba(248,250,252,0.10))",
-              boxShadow: "0 1px 0 rgba(15,23,42,0.20), 0 10px 40px rgba(2,6,23,0.35), inset 0 0 0 1px rgba(255,255,255,0.12)",
-              backdropFilter: "saturate(170%) blur(10px)",
-            }}
+            className="sm:hidden mb-4 rounded-2xl px-4 py-3 border bg-[color:var(--card)]"
           >
             <div className="flex flex-col gap-2">
               {links.map((l) => {
@@ -85,10 +70,7 @@ export function SiteNav() {
                   <Link
                     key={l.href}
                     href={l.href}
-                    className={
-                      "px-3 py-2 rounded-xl text-sm font-medium text-center " +
-                      (active ? "bg-sky-600 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200")
-                    }
+                    className={"btn " + (active ? "btn-primary" : "")}
                   >
                     {l.label}
                   </Link>

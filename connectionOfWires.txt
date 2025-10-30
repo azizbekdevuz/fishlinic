@@ -1,0 +1,28 @@
+servo: 
+    - -> board(- blue between j 9-10)
+    + -> board (+ red between j 9-10)
+    A -> arduino ~9
+
+DO sensor:
+    A -> arduino a3
+    + -> board (+ red between a 9-10)
+    - -> board (- blue between a 9-10)
+
+pH sensor:
+    A -> arduino a2
+    + -> board (+ red between a 15-16)
+    - -> board (- blue between a 15-16)
+
+RTC:
+    GND -> board (- blue between j 17-18)
+    VCC -> board (+ red between j 17-18)
+    SDA -> arduino a4
+    SCL -> arduino a5
+
+Arduino --> Board:
+    5v -> + red between a 1st row
+    GND -> - blue between 1st row
+
+Board --> Board:
+    a + 2nd row -> j + 1st row
+    a - 2nd row -> j - 1st row

@@ -25,7 +25,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="px-3 py-1.5 rounded-full text-sm font-medium transition bg-slate-100 text-slate-700 hover:bg-slate-200"
+      className="btn"
       aria-label="Toggle theme"
     >
       <span suppressHydrationWarning>

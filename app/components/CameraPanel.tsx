@@ -40,11 +40,11 @@ export function CameraPanel(props: CameraPanelProps) {
   return (
     <div className="card flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium text-slate-100">{props.title || "Live Camera"}</h2>
+        <h2 className="text-lg font-medium text-strong">{props.title || "Live Camera"}</h2>
         <div className="flex items-center gap-2">
           <button
             onClick={reload}
-            className="text-xs px-2 py-1 rounded border border-white/20 hover:bg-white/10 text-slate-100"
+            className="btn btn-outline text-xs"
             title="Reload stream"
           >
             Reload
@@ -53,27 +53,27 @@ export function CameraPanel(props: CameraPanelProps) {
       </div>
 
       {!effectiveSrc ? (
-        <div className="p-4 text-sm text-slate-300">
-          Camera URL not configured. Set <code className="text-slate-100">NEXT_PUBLIC_CAM_URL</code> or pass <code className="text-slate-100">url</code>.
+        <div className="p-4 text-sm text-muted">
+          Camera URL not configured. Set <code className="text-strong">NEXT_PUBLIC_CAM_URL</code> or pass <code className="text-strong">url</code>.
         </div>
       ) : (
         <div className="w-full aspect-video overflow-hidden rounded-lg border border-white/15 bg-black/60 flex items-center justify-center relative">
           {isError ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-4 text-center">
-              <div className="text-slate-100">Could not load camera stream</div>
-              <div className="text-xs text-slate-400">The camera server may be offline or blocking cross-origin requests.</div>
+              <div className="text-strong">Could not load camera stream</div>
+              <div className="text-xs text-muted">The camera server may be offline or blocking cross-origin requests.</div>
               <div className="flex items-center gap-2">
                 <a
                   href={camUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs px-2 py-1 rounded border border-white/20 hover:bg-white/10 text-slate-100"
+                  className="btn btn-outline text-xs"
                 >
                   Open stream in new tab
                 </a>
                 <button
                   onClick={reload}
-                  className="text-xs px-2 py-1 rounded border border-white/20 hover:bg-white/10 text-slate-100"
+                  className="btn btn-outline text-xs"
                 >
                   Retry
                 </button>
@@ -90,7 +90,7 @@ export function CameraPanel(props: CameraPanelProps) {
                 onError={() => { setIsLoading(false); setIsError("Failed to load stream"); }}
               />
               {isLoading && (
-                <div className="absolute text-slate-300 text-sm">Loading…</div>
+                <div className="absolute text-muted text-sm">Loading…</div>
               )}
             </>
           )}
@@ -98,10 +98,10 @@ export function CameraPanel(props: CameraPanelProps) {
       )}
 
       {isError && (
-        <div className="text-xs text-rose-300">{isError}. Ensure the tunnel is reachable and CORS allows this origin.</div>
+        <div className="text-xs text-danger">{isError}. Ensure the tunnel is reachable and CORS allows this origin.</div>
       )}
 
-      <div className="text-xs text-slate-400">
+      <div className="text-xs text-muted">
         For external links or dev tunnels, whitelisting this origin and using HTTPS now.
       </div>
     </div>

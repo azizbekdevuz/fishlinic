@@ -12,11 +12,13 @@
   },
   "dependencies": {
     "@serialport/parser-readline": "^13.0.0",
+    "@tailwindcss/postcss": "^4.1.16",
     "dotenv": "^17.2.2",
     "echarts": "^5.5.0",
     "echarts-for-react": "^3.0.2",
     "express": "^5.1.0",
     "next": "15.5.3",
+    "next-auth": "^4.24.13",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "serialport": "^13.0.0",
@@ -25,17 +27,19 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.1.16",
+    "@tailwindcss/postcss": "^4",
     "@types/express": "^5.0.3",
-    "@types/node": "^20.19.17",
+    "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "lightningcss-win32-x64-msvc": "^1.30.2",
     "npm-run-all": "^4.1.5",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5"
   }
 }

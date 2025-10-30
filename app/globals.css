@@ -1,69 +1,138 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+	--bg: oklch(0.16 0.03 245);
+	--fg: oklch(0.97 0.01 250);
+	--muted: oklch(0.75 0.02 250);
+	--card: oklch(0.20 0.03 245);
+	--card-foreground: var(--fg);
+	--border: oklch(0.33 0.03 245);
+	--ring: oklch(0.70 0.12 210);
+	--primary: oklch(0.72 0.15 210);
+	--primary-foreground: oklch(0.99 0.01 210);
+	--success: oklch(0.78 0.16 155);
+	--success-foreground: oklch(0.14 0.03 155);
+	--warning: oklch(0.86 0.15 85);
+	--warning-foreground: oklch(0.18 0.04 85);
+	--info: oklch(0.83 0.12 230);
+	--info-foreground: oklch(0.16 0.03 230);
+	--danger: oklch(0.66 0.22 27);
+	--danger-foreground: oklch(0.99 0.02 27);
+}
+
+.theme-light {
+	--bg: oklch(0.99 0.01 255);
+	--fg: oklch(0.18 0.03 245);
+	--muted: oklch(0.40 0.02 245);
+	--card: oklch(0.98 0.01 255);
+	--card-foreground: var(--fg);
+	--border: oklch(0.88 0.02 245);
+	--ring: oklch(0.70 0.12 210);
+	--primary: oklch(0.68 0.14 210);
+	--primary-foreground: oklch(0.99 0.01 210);
+	--success: oklch(0.78 0.16 155);
+	--success-foreground: oklch(0.14 0.03 155);
+	--warning: oklch(0.86 0.15 85);
+	--warning-foreground: oklch(0.18 0.04 85);
+	--info: oklch(0.83 0.12 230);
+	--info-foreground: oklch(0.16 0.03 230);
+	--danger: oklch(0.66 0.22 27);
+	--danger-foreground: oklch(0.99 0.02 27);
+}
 
 html, body, #__next { height: 100%; }
-body { background: #0b1220; color: #e5e7eb; }
-
-.card { @apply rounded-2xl p-4 shadow-sm; }
-
-/* --- Site-wide background (performant, CSS-only) --- */
-.site-bg { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
-.site-bg__gradient {
-  position: absolute; inset: -10% -10% 0 -10%;
-  background: radial-gradient(60% 60% at calc(10% + var(--dx,0)) calc(10% + var(--dy,0)), rgba(59,130,246,.25), transparent 55%),
-              radial-gradient(50% 50% at calc(90% - var(--dx,0)) calc(20% + var(--dy,0)), rgba(236,72,153,.20), transparent 55%),
-              radial-gradient(40% 45% at 50% calc(100% - var(--dy,0)), rgba(16,185,129,.20), transparent 60%);
-  filter: blur(60px);
-  animation: bg-move 24s linear infinite alternate;
-}
-.site-bg__grid {
-  position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: 40px 40px, 40px 40px;
-  mask-image: radial-gradient(80% 80% at 50% 40%, rgba(0,0,0,0.9), rgba(0,0,0,0));
-}
-/* Pointer-reactive radial glow */
-.site-bg__pointer {
-  position: absolute; inset: 0;
-  background: radial-gradient(300px 300px at var(--mx, 50%) var(--my, 50%), rgba(59,130,246,.15), rgba(59,130,246,0) 60%),
-              radial-gradient(220px 220px at calc(var(--mx, 50%) + 120px) calc(var(--my, 50%) + 60px), rgba(236,72,153,.12), rgba(236,72,153,0) 60%);
-  transition: background 160ms linear;
-}
-/* Smooth, GPU-friendly particle shimmer (no DOM nodes) */
-.site-bg__particles {
-  position: absolute; inset: 0;
-  background-image:
-    radial-gradient(2px 2px at calc(10% + var(--dx,0)) calc(30% + var(--dy,0)), rgba(255,255,255,0.08), transparent 60%),
-    radial-gradient(1.5px 1.5px at calc(60% - var(--dx,0)) calc(70% - var(--dy,0)), rgba(255,255,255,0.06), transparent 60%),
-    radial-gradient(1.8px 1.8px at calc(85% + var(--dx,0)) calc(55% + var(--dy,0)), rgba(255,255,255,0.05), transparent 60%);
-  pointer-events: none;
-}
-@keyframes bg-move {
-  0% { transform: translate3d(0, -2%, 0) scale(1.0); }
-  100% { transform: translate3d(0, 2%, 0) scale(1.05); }
+body {
+	background-color: var(--bg);
+	color: var(--fg);
+	background-image:
+		radial-gradient(1200px 600px at 10% 0%, color-mix(in oklch, var(--primary) 15%, transparent), transparent 60%),
+		radial-gradient(900px 500px at 90% 20%, color-mix(in oklch, var(--ring) 20%, transparent), transparent 60%);
+	background-attachment: fixed;
 }
 
-/* Glassy card refinement */
-.card { background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(248,250,252,0.10)); box-shadow: 0 1px 0 rgba(15,23,42,0.20), 0 10px 40px rgba(2,6,23,0.35), inset 0 0 0 1px rgba(255,255,255,0.12); backdrop-filter: saturate(170%) blur(10px); }
-
-/* --- Light theme overrides --- */
-.theme-light body { background: #f7fafc; color: #0b1220; }
-.theme-light .card { background: #ffffff; box-shadow: 0 1px 0 rgba(0,0,0,0.06), 0 8px 30px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(0,0,0,0.04); }
-.theme-light .site-bg__grid { background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px); }
-.theme-light .site-bg__pointer { background: radial-gradient(300px 300px at var(--mx, 50%) var(--my, 50%), rgba(59,130,246,.10), rgba(59,130,246,0) 60%), radial-gradient(220px 220px at calc(var(--mx, 50%) + 120px) calc(var(--my, 50%) + 60px), rgba(236,72,153,.10), rgba(236,72,153,0) 60%); }
-.theme-light .site-bg__particles { background-image:
-  radial-gradient(2px 2px at calc(10% + var(--dx,0)) calc(30% + var(--dy,0)), rgba(0,0,0,0.08), transparent 60%),
-  radial-gradient(1.5px 1.5px at calc(60% - var(--dx,0)) calc(70% - var(--dy,0)), rgba(0,0,0,0.06), transparent 60%),
-  radial-gradient(1.8px 1.8px at calc(85% + var(--dx,0)) calc(55% + var(--dy,0)), rgba(0,0,0,0.05), transparent 60%);
+/* Simple reusable surface */
+.card {
+	border-radius: 1rem;
+	border: 1px solid var(--border);
+	background-color: var(--card);
+	color: var(--card-foreground);
+	padding: 1rem;
+	transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
 }
-.theme-light .text-slate-100 { color: #0b1220; }
-.theme-light .text-slate-200 { color: #111827; }
-.theme-light .text-slate-300 { color: #374151; }
-.theme-light .text-slate-400 { color: #4b5563; }
-/* Escape sequences above are valid in Tailwind classes, but vanilla CSS parsers in IDEs flag them. */
-/* Replace with attribute-aware selectors to avoid CSS syntax errors while preserving effect. */
+.card:hover {
+	border-color: color-mix(in oklch, var(--primary) 40%, var(--border));
+	box-shadow: 0 8px 30px color-mix(in oklch, var(--primary) 18%, transparent);
+	transform: translateY(-1px);
+}
+
+/* Buttons */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	border-radius: 9999px;
+	border: 1px solid var(--border);
+	padding: 0.375rem 0.75rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--fg);
+	background-color: color-mix(in oklch, var(--card) 80%, transparent);
+	transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+}
+.btn:hover {
+	background-color: color-mix(in oklch, var(--card) 65%, var(--primary) 5%);
+	border-color: color-mix(in oklch, var(--border) 70%, var(--primary) 30%);
+	box-shadow: 0 4px 18px color-mix(in oklch, var(--primary) 15%, transparent);
+}
+.btn:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 25%, var(--ring));
+}
+.btn-primary { background-color: var(--primary); color: var(--primary-foreground); border-color: color-mix(in oklch, var(--primary) 70%, var(--border)); }
+.btn-primary:hover { background-color: color-mix(in oklch, var(--primary) 85%, var(--ring)); }
+.btn-outline { background-color: transparent; color: var(--fg); border-color: var(--border); }
+.btn-outline:hover { background-color: color-mix(in oklch, var(--card) 70%, transparent); border-color: color-mix(in oklch, var(--border) 60%, var(--primary) 40%); }
+.btn-ghost { background-color: transparent; border-color: transparent; color: var(--fg); }
+.btn-ghost:hover { background-color: color-mix(in oklch, var(--card) 60%, transparent); }
+
+/* Badges */
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	border-radius: 9999px;
+	padding: 0.125rem 0.5rem;
+	font-size: 0.75rem;
+	border: 1px solid var(--border);
+	color: var(--fg);
+	background-color: color-mix(in oklch, var(--card) 80%, transparent);
+}
+.badge-success { background-color: color-mix(in oklch, var(--success) 20%, var(--card)); color: var(--success-foreground); border-color: color-mix(in oklch, var(--success) 40%, var(--border)); }
+.badge-warning { background-color: color-mix(in oklch, var(--warning) 22%, var(--card)); color: var(--warning-foreground); border-color: color-mix(in oklch, var(--warning) 45%, var(--border)); }
+.badge-info { background-color: color-mix(in oklch, var(--info) 20%, var(--card)); color: var(--info-foreground); border-color: color-mix(in oklch, var(--info) 40%, var(--border)); }
+.badge-danger { background-color: color-mix(in oklch, var(--danger) 20%, var(--card)); color: var(--danger-foreground); border-color: color-mix(in oklch, var(--danger) 45%, var(--border)); }
+.badge-outline { background-color: transparent; color: var(--fg); }
+
+/* Text semantics */
+.text-strong { color: var(--fg); }
+.text-muted { color: var(--muted); }
+.text-primary { color: var(--primary); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-info { color: var(--info); }
+.text-danger { color: var(--danger); }
+
+/* Headings accent */
+.hx { letter-spacing: 0.01em; }
+.hx-accent { background: linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 40%, var(--fg))); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Legacy slate overrides can be removed as we migrate components; keep for compatibility for now */
+.theme-light .text-slate-100 { color: oklch(0.14 0.02 247) !important; }
+.theme-light .text-slate-200 { color: oklch(0.18 0.02 247) !important; }
+.theme-light .text-slate-300 { color: oklch(0.27 0.02 247) !important; }
+.theme-light .text-slate-400 { color: oklch(0.33 0.02 247) !important; }
+
 .theme-light [class*="border-white/15"] { border-color: rgba(0,0,0,0.12) !important; }
 .theme-light [class*="border-white/10"] { border-color: rgba(0,0,0,0.08) !important; }
 .theme-light [class*="bg-white/10"] { background-color: rgba(0,0,0,0.03) !important; }
