@@ -18,18 +18,42 @@ const AI_BASE_URL = process.env.AI_BASE_URL || "http://localhost:8000";
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+
+// CORS configuration: allow localhost by default; override with ALLOWED_ORIGINS (comma-separated)
+const DEFAULT_ORIGINS = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+const envOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const ALLOWED_ORIGINS = envOrigins.length ? envOrigins : DEFAULT_ORIGINS;
+
+const io = new Server(server, {
+  cors: {
+    origin: ALLOWED_ORIGINS,
+    methods: ["GET", "POST"],
+  },
+  transports: ["websocket"],
+});
+
 // Basic CORS for REST endpoints (no extra dependency)
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,OPTIONS");
+  const origin = req.headers.origin as string | undefined;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+  res.header("Vary", "Origin");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
 
 // --- Persistent storage: JSONL files in ./data/YYYY-MM-DD.jsonl ---
-const DATA_DIR = path.resolve(__dirname, "data");
+// Allow override via DATA_DIR to avoid dev watcher loops in Next.js
+const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, "data"));
 function ensureDataDir() {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
