@@ -1,100 +1,146 @@
 "use client";
 
-import { Status } from "@/app/lib/types";
+import { useMemo } from "react";
+import type { Status } from "@/app/lib/types";
 
-export function Gauge({
-  value,
-  status,
-  label = "meter (1 - 10)",
-  min = 1,
-  max = 10,
-  decimals = 1
-}: {
+type GaugeProps = {
   value: number;
+  min: number;
+  max: number;
+  decimals: number;
+  label: string;
   status: Status;
-  label?: string;
-  min?: number;
-  max?: number;
-  decimals?: number;
-}) {
-  const safeMin = Number.isFinite(min) ? min : 0;
-  const safeMax = Number.isFinite(max) ? max : 10;
-  const span = Math.max(1e-6, safeMax - safeMin);
-  const rawRatio = (value - safeMin) / span;
-  const ratio = Math.max(0, Math.min(1, rawRatio));
-  const angle = -90 + ratio * 180;
-  // Responsive sizing: base on container width via viewBox; fixed geometry for math
-  const size = 300;
-  const cx = size / 2;
-  const cy = size / 2 + 12;
-  const r = 110;
+};
 
-  function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: number) {
-    const a = ((angleInDegrees - 90) * Math.PI) / 180;
-    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
-  }
-  function arc(start: number, end: number) {
-    const s = polarToCartesian(cx, cy, r, end);
-    const e = polarToCartesian(cx, cy, r, start);
-    const large = end - start <= 180 ? "0" : "1";
-    return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 0 ${e.x} ${e.y}`;
-  }
+export function Gauge({ value, min, max, decimals, label, status }: GaugeProps) {
+  const percentage = useMemo(() => {
+    const clamped = Math.max(min, Math.min(max, value));
+    return ((clamped - min) / (max - min)) * 100;
+  }, [value, min, max]);
 
-  const colors = {
-    ring: status === "good" ? "#e9edf3" : status === "average" ? "#FACC15" : "#EF4444",
-    glow: status === "good" ? "transparent" : status === "average" ? "rgba(250, 204, 21, .35)" : "rgba(239, 68, 68, .45)"
-  };
+  const statusColor = useMemo(() => {
+    switch (status) {
+      case "good": return "rgb(var(--accent))";
+      case "average": return "rgb(var(--warning))";
+      case "alert": return "rgb(var(--danger))";
+      default: return "rgb(var(--primary))";
+    }
+  }, [status]);
 
-  const valueFill = status === "good" ? "#E5E7EB" : status === "average" ? "#FDE68A" : "#FCA5A5";
+  const statusGradient = useMemo(() => {
+    switch (status) {
+      case "good": return "from-emerald-500 to-green-400";
+      case "average": return "from-yellow-500 to-amber-400";
+      case "alert": return "from-red-500 to-rose-400";
+      default: return "from-blue-500 to-cyan-400";
+    }
+  }, [status]);
+
+  const circumference = 2 * Math.PI * 90; // radius = 90
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="relative w-full flex flex-col items-center">
-      <div
-        className="w-full rounded-3xl p-5"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.10), rgba(248,250,252,0.12))",
-          boxShadow:
-            "0 1px 0 rgba(255,255,255,0.10), 0 10px 40px rgba(2,6,23,0.35), inset 0 0 0 1px rgba(255,255,255,0.12)",
-          backdropFilter: "saturate(170%) blur(8px)"
-        }}
-      >
-        <svg className="w-full h-auto" viewBox={`0 0 ${size} ${size / 1.35}`} preserveAspectRatio="xMidYMid meet">
-          <path d={arc(-90, 90)} stroke="#EEF2F7" strokeWidth={18} fill="none" strokeLinecap="round" />
-          <path
-            d={arc(-90, 90)}
-            stroke={colors.ring}
-            strokeWidth={4}
-            fill="none"
-            strokeLinecap="round"
-            style={{ filter: `drop-shadow(0 0 10px ${colors.glow})` }}
+    <div className="flex flex-col items-center justify-center p-6">
+      {/* Circular Gauge */}
+      <div className="relative w-48 h-48 mb-6">
+        {/* Background Circle */}
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+          {/* Background track */}
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            stroke="rgba(255, 255, 255, 0.1)"
+            strokeWidth="8"
+            fill="transparent"
+            className="drop-shadow-sm"
           />
-          {[...Array(9)].map((_, i) => {
-            const a = -90 + (i * 180) / 8;
-            const inner = polarToCartesian(cx, cy, r - 18, a);
-            const outer = polarToCartesian(cx, cy, r - 4, a);
-            return <line key={i} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke="#CBD5E1" strokeWidth={2} />;
-          })}
-          <g
-            transform={`rotate(${angle} ${cx} ${cy})`}
-            style={{ transition: "transform 600ms cubic-bezier(.22,1,.36,1)" }}
-          >
-            <rect x={cx - 2.5} y={cy - r + 10} width={5} height={r - 18} rx={2.5} fill="#0F172A" />
-            <circle cx={cx} cy={cy - r + 12} r={5} fill="#0F172A" />
-          </g>
-          <circle cx={cx} cy={cy} r={9} fill="#0F172A" />
-          <circle cx={cx} cy={cy} r={15} fill="white" opacity={0.85} />
-          <circle cx={cx} cy={cy} r={6} fill="#0F172A" />
-          <text x={cx} y={cy + 50} fontSize={34} fontWeight={800} textAnchor="middle" fill={valueFill}>
-            {Number.isFinite(value) ? value.toFixed(decimals) : "–"}
-          </text>
-          <text x={cx} y={cy + 70} fontSize={12} textAnchor="middle" fill="#64748B">
-            {label} {`(${safeMin} – ${safeMax})`}
-          </text>
+          
+          {/* Progress circle */}
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            stroke={statusColor}
+            strokeWidth="8"
+            fill="transparent"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-out drop-shadow-lg"
+            style={{
+              filter: `drop-shadow(0 0 8px ${statusColor}40)`
+            }}
+          />
+          
+          {/* Glow effect */}
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            stroke={statusColor}
+            strokeWidth="2"
+            fill="transparent"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="opacity-60 animate-pulse"
+          />
         </svg>
+
+        {/* Center Content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="text-center">
+            <div 
+              className="text-4xl font-bold mb-2 animate-fade-in"
+              style={{ color: statusColor }}
+            >
+              {value.toFixed(decimals)}
+            </div>
+            <div className="text-xs font-medium opacity-80" style={{ color: "rgb(var(--text-muted))" }}>
+              {min} - {max}
+            </div>
+          </div>
+        </div>
+
+        {/* Status Indicator */}
+        <div className="absolute -top-2 -right-2">
+          <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${statusGradient} animate-pulse shadow-lg`}>
+            <div className="w-full h-full rounded-full bg-white/20"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Label and Status */}
+      <div className="text-center space-y-2">
+        <h3 className="text-lg font-semibold" style={{ color: "rgb(var(--text-primary))" }}>
+          {label}
+        </h3>
+        
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+          status === "good" ? "status-good" : 
+          status === "average" ? "status-warning" : "status-danger"
+        }`}>
+          <div className={`w-2 h-2 rounded-full bg-current animate-pulse`}></div>
+          {status === "good" ? "Optimal" : 
+           status === "average" ? "Acceptable" : "Critical"}
+        </div>
+      </div>
+
+      {/* Progress Bar Alternative for Mobile */}
+      <div className="w-full mt-4 sm:hidden">
+        <div className="flex justify-between text-xs mb-1" style={{ color: "rgb(var(--text-muted))" }}>
+          <span>{min}</span>
+          <span>{max}</span>
+        </div>
+        <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+          <div 
+            className={`h-full bg-gradient-to-r ${statusGradient} transition-all duration-1000 ease-out`}
+            style={{ width: `${percentage}%` }}
+          ></div>
+        </div>
       </div>
     </div>
   );
 }
-
-

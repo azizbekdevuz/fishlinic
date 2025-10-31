@@ -21,6 +21,7 @@ import os
 _default_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://fishlinic.vercel.app"
 ]
 _env_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 _allowed_origins = _env_origins if _env_origins else _default_origins

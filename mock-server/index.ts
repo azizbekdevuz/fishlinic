@@ -23,6 +23,7 @@ const server = http.createServer(app);
 const DEFAULT_ORIGINS = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "https://fishlinic.vercel.app"
 ];
 const envOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
