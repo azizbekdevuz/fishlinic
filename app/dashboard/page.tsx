@@ -12,6 +12,7 @@ import { QuickStatsCard } from "@/app/components/QuickStatsCard";
 import { StatusCard } from "@/app/components/StatusCard";
 import { TelemetryTable } from "@/app/components/TelemetryTable";
 import { CameraPanel } from "../components/CameraPanel";
+import { FeederPanel } from "@/app/components/FeederPanel";
 import { SimpleGame } from "@/app/components/SimpleGame";
 import { 
   Wifi, 
@@ -99,11 +100,11 @@ export default function DashboardPage() {
 
   // Memoize connection status
   const connectionInfo = useMemo(() => {
-    const connectionStatus = serialConnected === false ? "disconnected" : 
-                           socketConnected ? "connected" : "mock";
+    const connectionStatus = socketConnected
+      ? (serialConnected === false ? "mock" : "connected")
+      : "disconnected";
     const connectionColor = connectionStatus === "connected" ? "status-good" : 
                            connectionStatus === "mock" ? "status-warning" : "status-danger";
-    
     return { connectionStatus, connectionColor };
   }, [serialConnected, socketConnected]);
 
@@ -119,7 +120,7 @@ export default function DashboardPage() {
   const { connectionStatus, connectionColor } = connectionInfo;
 
   // Loading states with memoized components
-  if (serialConnected === false) {
+  if (serialConnected === false && telemetry.length === 0) {
     return (
       <div className="bg-gradient-main min-h-screen">
         <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -316,6 +317,9 @@ export default function DashboardPage() {
                   title="Live Camera Feed" 
                 />
               </div>
+
+              {/* Feeder Control */}
+              <FeederPanel />
 
               {/* Quick Actions */}
               <div className="card-glass animate-slide-in" style={{ animationDelay: "300ms" }}>
