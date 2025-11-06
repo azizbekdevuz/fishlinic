@@ -86,7 +86,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
               <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium" style={{ color: "rgb(var(--text-primary))" }}>
-                Sejong University Capstone Project 2024
+                Sejong University Capstone Project 2025
               </span>
             </div>
 
