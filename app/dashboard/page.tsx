@@ -238,52 +238,45 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* Main Content - Optimized Layout */}
+        {/* Main Content - Clean 12-col Layout */}
         <div className="space-y-6">
-          {/* Primary Metrics */}
-          <section className="animate-slide-in">
-            <div className="card-glass">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold" style={{ color: "rgb(var(--text-primary))" }}>
-                  Water Quality Monitor
-                </h2>
-                <div className={`badge ${
-                  status === "good" ? "status-good" : 
-                  status === "average" ? "status-warning" : "status-danger"
-                }`}>
-                  {status === "good" ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
-                  {status.toUpperCase()}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            {/* Left Column: KPI + Trends */}
+            <section className="xl:col-span-8 space-y-6">
+              <div className="card-glass animate-slide-in">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold" style={{ color: "rgb(var(--text-primary))" }}>
+                    Water Quality Monitor
+                  </h2>
+                  <div className={`badge ${
+                    status === "good" ? "status-good" : 
+                    status === "average" ? "status-warning" : "status-danger"
+                  }`}>
+                    {status === "good" ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                    {status.toUpperCase()}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                  <div className="lg:col-span-2 space-y-4">
+                    {gauge && (
+                      <MemoizedGauge 
+                        value={gauge.value} 
+                        status={status} 
+                        label={gauge.label} 
+                        min={gauge.min} 
+                        max={gauge.max} 
+                        decimals={gauge.decimals} 
+                      />
+                    )}
+                    <MetricToggle metric={metric} onChange={handleMetricChange} />
+                  </div>
+                  <div className="space-y-4">
+                    <MemoizedQuickStatsCard latest={latest} />
+                    <MemoizedStatusCard status={status} />
+                  </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                <div className="lg:col-span-2 space-y-4">
-                  {gauge && (
-                    <MemoizedGauge 
-                      value={gauge.value} 
-                      status={status} 
-                      label={gauge.label} 
-                      min={gauge.min} 
-                      max={gauge.max} 
-                      decimals={gauge.decimals} 
-                    />
-                  )}
-                  <MetricToggle metric={metric} onChange={handleMetricChange} />
-                </div>
-                
-                <div className="space-y-4">
-                  <MemoizedQuickStatsCard latest={latest} />
-                  <MemoizedStatusCard status={status} />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Chart and Camera - Optimized Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Chart Section */}
-            <section className="xl:col-span-2 animate-slide-in" style={{ animationDelay: "100ms" }}>
-              <div className="card-glass">
+              <div className="card-glass animate-slide-in" style={{ animationDelay: "100ms" }}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                   <h2 className="text-xl font-semibold" style={{ color: "rgb(var(--text-primary))" }}>
                     Trend Analysis
@@ -298,35 +291,27 @@ export default function DashboardPage() {
                     <option value="1m">Last Month</option>
                   </select>
                 </div>
-                
                 <div className="h-64 sm:h-80 rounded-xl border border-white/10 bg-white/5 p-4">
                   <MemoizedTelemetryChart history={history} />
                 </div>
-                
                 <p className="text-xs mt-4" style={{ color: "rgb(var(--text-muted))" }}>
                   Showing {history.length} data points from the last {range === "24h" ? "24 hours" : range === "1w" ? "week" : "month"}
                 </p>
               </div>
             </section>
-
-            {/* Sidebar */}
-            <aside className="xl:col-span-1 space-y-6">
+            {/* Right Column: Camera + Feeder + Utilities */}
+            <aside className="xl:col-span-4 space-y-6">
               <div className="animate-slide-in" style={{ animationDelay: "200ms" }}>
                 <MemoizedCameraPanel 
                   url={process.env.NEXT_PUBLIC_CAM_URL} 
                   title="Live Camera Feed" 
                 />
               </div>
-
-              {/* Feeder Control */}
               <FeederPanel />
-
-              {/* Quick Actions */}
               <div className="card-glass animate-slide-in" style={{ animationDelay: "300ms" }}>
                 <h3 className="text-lg font-semibold mb-4" style={{ color: "rgb(var(--text-primary))" }}>
                   Quick Actions
                 </h3>
-                
                 <div className="grid grid-cols-2 gap-3">
                   <button className="btn btn-secondary btn-sm">
                     <Download className="w-4 h-4" />
@@ -346,13 +331,10 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </div>
-
-              {/* System Health */}
               <div className="card-glass animate-slide-in" style={{ animationDelay: "400ms" }}>
                 <h3 className="text-lg font-semibold mb-4" style={{ color: "rgb(var(--text-primary))" }}>
                   System Health
                 </h3>
-                
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm" style={{ color: "rgb(var(--text-secondary))" }}>
@@ -363,14 +345,12 @@ export default function DashboardPage() {
                        connectionStatus === "mock" ? "Simulated" : "Lost"}
                     </div>
                   </div>
-                  
                   <div className="flex items-center justify-between">
                     <span className="text-sm" style={{ color: "rgb(var(--text-secondary))" }}>
                       AI Processing
                     </span>
                     <div className="badge status-good text-xs">Active</div>
                   </div>
-                  
                   <div className="flex items-center justify-between">
                     <span className="text-sm" style={{ color: "rgb(var(--text-secondary))" }}>
                       Data Quality
