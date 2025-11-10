@@ -26,6 +26,7 @@ export interface AuthSession {
   user: AuthUser;
   expires: string;
   accessToken?: string;
+  verifiedAt?: string | null; // ISO date string when user was verified
 }
 
 /**
@@ -37,6 +38,7 @@ export interface AuthJWT {
   email: string;
   name?: string | null;
   accessToken?: string;
+  verifiedAt?: string | null; // ISO date string when user was verified
   iat?: number;
   exp?: number;
   jti?: string;

@@ -17,8 +17,9 @@ NEXT_PUBLIC_ASSISTANT_URL=http://localhost:5000
 PORT=4000
 DATA_DIR=../exhibition-data
 
-# Virtual Assistant Configuration
-TELEMETRY_BASE_URL=http://localhost:4000
+# Ollama Configuration (for Virtual Assistant)
+OLLAMA_URL=http://localhost:11434
+ASSISTANT_MODEL=qwen2.5:3b
 
 # NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
@@ -41,9 +42,9 @@ npm start
 cd mock-server
 npm start
 
-# Terminal 3: Start Virtual Assistant Service
-cd virtual-assistant
-python service.py
+# Terminal 3: Start Ollama (if not running as service)
+# ollama serve
+# Note: Virtual Assistant is now integrated into Next.js, no separate service needed
 ```
 
 ## Quick Production Start Script
@@ -61,7 +62,7 @@ call npm run build
 echo Starting services...
 start "Next.js App" cmd /k "npm start"
 start "Mock Server" cmd /k "cd mock-server && npm start"
-start "Virtual Assistant" cmd /k "cd virtual-assistant && python service.py"
+echo Note: Ensure Ollama is running (ollama serve) for Virtual Assistant features
 
 echo All services started! 
 echo Dashboard: http://localhost:3000
@@ -80,7 +81,7 @@ npm run build
 echo "Starting services..."
 gnome-terminal -- bash -c "npm start; exec bash" &
 gnome-terminal -- bash -c "cd mock-server && npm start; exec bash" &
-gnome-terminal -- bash -c "cd virtual-assistant && python service.py; exec bash" &
+echo "Note: Ensure Ollama is running (ollama serve) for Virtual Assistant features"
 
 echo "All services started!"
 echo "Dashboard: http://localhost:3000"
@@ -90,7 +91,7 @@ echo "Virtual Assistant: http://localhost:3000/vassistant"
 ## Service Ports
 - **Next.js Dashboard**: http://localhost:3000
 - **Mock Telemetry Server**: http://localhost:4000
-- **Virtual Assistant API**: http://localhost:5000
+- **Ollama API**: http://localhost:11434 (for Virtual Assistant)
 - **Camera Stream**: http://localhost:8080 (if available)
 
 ## Exhibition URLs
@@ -99,6 +100,7 @@ echo "Virtual Assistant: http://localhost:3000/vassistant"
 - **Homepage**: http://localhost:3000
 
 ## Troubleshooting
-- Ensure all ports (3000, 4000, 5000) are available
-- Check that Python virtual environment is activated for VA
-- Verify Node.js dependencies are installed in all directories
+- Ensure all ports (3000, 4000, 11434) are available
+- Verify Ollama is running: `ollama serve` or check `http://localhost:11434`
+- Ensure Ollama model is pulled: `ollama pull qwen2.5:3b` (or your configured model)
+- Verify Node.js dependencies are installed

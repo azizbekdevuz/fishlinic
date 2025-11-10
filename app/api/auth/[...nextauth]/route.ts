@@ -68,6 +68,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }): Promise<JWT> {
       // Initial sign in
       if (user && "id" in user && typeof user.id === "string") {
+        // Fetch user from DB to get verification status
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { verifiedAt: true }
+        });
+        
         const authToken: AuthJWT = {
           ...token,
           id: user.id,
@@ -75,9 +81,23 @@ export const authOptions: NextAuthOptions = {
           name: user.name ?? null,
           // Generate bearer token for API use
           accessToken: `bearer_${user.id}_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`,
+          verifiedAt: dbUser?.verifiedAt?.toISOString() ?? null,
         };
         return authToken as JWT;
       }
+      
+      // Refresh verification status on token refresh (every request)
+      if (token && "id" in token && typeof token.id === "string") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { verifiedAt: true }
+        });
+        return {
+          ...token,
+          verifiedAt: dbUser?.verifiedAt?.toISOString() ?? null,
+        } as JWT;
+      }
+      
       return token as JWT;
     },
     async session({ session, token }): Promise<Session> {
@@ -90,6 +110,7 @@ export const authOptions: NextAuthOptions = {
             name: token.name ?? null,
           },
           accessToken: typeof token.accessToken === "string" ? token.accessToken : undefined,
+          verifiedAt: typeof token.verifiedAt === "string" ? token.verifiedAt : null,
         };
         return authSession as Session;
       }
@@ -106,4 +127,3 @@ export const authOptions: NextAuthOptions = {
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
-

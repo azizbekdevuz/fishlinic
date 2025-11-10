@@ -26,17 +26,17 @@ type Message = {
   ts: number;
 };
 
-const ASSISTANT_URL =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_ASSISTANT_URL) ||
-  "http://localhost:5055";
-
+// Use Next.js API routes instead of external Python service
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${ASSISTANT_URL}${path}`, {
+  const res = await fetch(`/api${path}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
     ...init,
   });
-  if (!res.ok) throw new Error(`${res.status}`);
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.error || `${res.status}`);
+  }
   return (await res.json()) as T;
 }
 
@@ -67,11 +67,13 @@ function VAssistantContent() {
   async function refreshStatus() {
     try {
       const s = await api<{ initiated: boolean; camera_running: boolean; model_id: string }>(
-        "/status"
+        "/assistant/status"
       );
       setInitiated(s.initiated);
       setCameraRunning(s.camera_running);
-    } catch {}
+    } catch {
+      // Silently fail - status will update on next poll
+    }
   }
 
   useEffect(() => {
@@ -152,21 +154,46 @@ function VAssistantContent() {
 
   async function onSpeak(text: string) {
     try {
+      // Use browser Web Speech API for TTS
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+      // Also call API to track usage
       await api<{ ok: boolean }>("/assistant/say", { 
         method: "POST", 
         body: JSON.stringify({ text }) 
       });
-    } catch {}
+    } catch {
+      // Fallback: try browser TTS even if API fails
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+      }
+    }
   }
 
   async function onCameraOpen() {
     setBusy(true);
     setError(null);
     try {
+      // Try to access camera via browser API
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      
+      // If successful, update state via API
       await api<{ ok: boolean }>("/camera/open", { method: "POST" });
       setCameraRunning(true);
-    } catch {
-      setError("Camera failed to open");
+      
+      // Store stream for cleanup
+      (window as any).cameraStream = stream;
+    } catch (err) {
+      console.error("Camera error:", err);
+      setError("Camera access denied or unavailable. Please check permissions.");
     } finally {
       setBusy(false);
     }
@@ -176,6 +203,13 @@ function VAssistantContent() {
     setBusy(true);
     setError(null);
     try {
+      // Stop camera stream if exists
+      const stream = (window as any).cameraStream as MediaStream | undefined;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        delete (window as any).cameraStream;
+      }
+      
       await api<{ ok: boolean }>("/camera/close", { method: "POST" });
       setCameraRunning(false);
     } catch {
@@ -285,7 +319,7 @@ function VAssistantContent() {
               </div>
               
               <p className="text-xs mt-3" style={{ color: "rgb(var(--text-muted))" }}>
-                Camera opens in a native window for fish monitoring and health analysis.
+                Camera access via browser. Grant permissions when prompted.
               </p>
             </div>
 

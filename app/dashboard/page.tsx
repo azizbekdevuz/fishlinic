@@ -34,6 +34,11 @@ import { ExportDataModal } from "@/app/components/ExportDataModal";
 import { AlertSettingsModal } from "@/app/components/AlertSettingsModal";
 import { AskAIModal } from "@/app/components/AskAIModal";
 import { SettingsModal } from "@/app/components/SettingsModal";
+import { AlertBanner } from "@/app/components/AlertBanner";
+import { StatisticsCard } from "@/app/components/StatisticsCard";
+import { useAlerts } from "@/app/hooks/useAlerts";
+import { useSettings } from "@/app/hooks/useSettings";
+import { RefreshCw, Filter } from "lucide-react";
 
 // Memoized components to prevent unnecessary re-renders
 const MemoizedGauge = memo(Gauge);
@@ -44,20 +49,34 @@ const MemoizedTelemetryTable = memo(TelemetryTable);
 const MemoizedCameraPanel = memo(CameraPanel);
 
 function DashboardContent() {
-  // Use throttled telemetry updates for better performance
-  const { telemetry, latest, socketConnected, serialConnected } = useTelemetry({
-    updateThrottleMs: 2000, // Update UI every 2 seconds instead of every change
-    bufferSize: 150 // Reduce buffer size for better performance
+  const { user } = useAuth();
+  const { settings, isLoaded, formatTemperature } = useSettings();
+  
+  // Use throttled telemetry updates for better performance with user filtering
+  const { telemetry, latest, socketConnected, serialConnected, refresh } = useTelemetry({
+    updateThrottleMs: settings.refreshInterval * 1000 || 2000,
+    bufferSize: 150,
+    userId: user?.id // Filter by user ID
   });
   
   const [metric, setMetric] = useState<MetricKey>("overall");
-  const [range, setRange] = useState<"24h" | "1w" | "1m">("1w");
+  const [range, setRange] = useState<"24h" | "1w" | "1m">(settings.defaultTimeRange || "1w");
+  const [tableRange, setTableRange] = useState<"12" | "24" | "50" | "100">("12");
+  const [tableFilter, setTableFilter] = useState<"all" | "good" | "average" | "alert">("all");
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const toast = useToast();
   const hasCheckedToast = useRef(false);
+  
+  // Apply default time range from settings on load
+  useEffect(() => {
+    if (isLoaded && settings.defaultTimeRange) {
+      setRange(settings.defaultTimeRange);
+    }
+  }, [isLoaded, settings.defaultTimeRange]);
 
   // Check for server-initiated toast (only once)
   useEffect(() => {
@@ -115,13 +134,31 @@ function DashboardContent() {
       .filter(s => new Date(s.timestamp).getTime() >= historyCutoffMs)
       .slice(-pointsCount);
     
-    const recentRows = telemetry.slice(-12).reverse();
+    // Filter table rows by count and status
+    let filteredRows = telemetry.slice(-parseInt(tableRange)).reverse();
+    
+    if (tableFilter !== "all") {
+      filteredRows = filteredRows.filter(row => {
+        const status = row.status_ai ?? statusForReading(row);
+        return status === tableFilter;
+      });
+    }
     
     return {
       history: filteredHistory,
-      tableRows: recentRows
+      tableRows: filteredRows
     };
-  }, [telemetry, range]);
+  }, [telemetry, range, tableRange, tableFilter]);
+  
+  // Alert monitoring
+  const { activeAlerts, hasAlerts, hasCriticalAlerts } = useAlerts(latest);
+  
+  // Handle manual refresh
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setTimeout(() => setIsRefreshing(false), 500);
+  }, [refresh]);
 
   // Memoize connection status
   const connectionInfo = useMemo(() => {
@@ -227,7 +264,10 @@ function DashboardContent() {
 
   return (
     <div className="bg-gradient-main min-h-screen">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      {/* Alert Banner */}
+      {hasAlerts && <AlertBanner alerts={activeAlerts} />}
+      
+      <div className="container mx-auto px-4 py-6 max-w-7xl" style={{ marginTop: hasAlerts ? "60px" : "0" }}>
         {/* Header - Memoized */}
         <header className="mb-8 animate-fade-in">
           <div className="glass-strong p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -259,6 +299,22 @@ function DashboardContent() {
                   Updated {formatDateTime(latest.timestamp)}
                 </span>
               </div>
+              
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="btn btn-ghost btn-sm"
+                title="Refresh data"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              </button>
+              
+              {hasAlerts && (
+                <div className={`badge ${hasCriticalAlerts ? "status-danger" : "status-warning"}`}>
+                  <AlertTriangle className="w-3 h-3" />
+                  {activeAlerts.length} Alert{activeAlerts.length > 1 ? "s" : ""}
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -298,6 +354,7 @@ function DashboardContent() {
                   <div className="space-y-4">
                     <MemoizedQuickStatsCard latest={latest} />
                     <MemoizedStatusCard status={status} />
+                    <StatisticsCard history={history} latest={latest} />
                   </div>
                 </div>
               </div>
@@ -317,7 +374,7 @@ function DashboardContent() {
                   </select>
                 </div>
                 <div className="h-64 sm:h-80 rounded-xl border border-white/10 bg-white/5 p-4">
-                  <MemoizedTelemetryChart history={history} />
+                  <MemoizedTelemetryChart history={history} animated={settings.chartAnimation} />
                 </div>
                 <p className="text-xs mt-4" style={{ color: "rgb(var(--text-muted))" }}>
                   Showing {history.length} data points from the last {range === "24h" ? "24 hours" : range === "1w" ? "week" : "month"}
@@ -406,8 +463,33 @@ function DashboardContent() {
                 <h2 className="text-xl font-semibold" style={{ color: "rgb(var(--text-primary))" }}>
                   Recent Measurements
                 </h2>
-                <div className="badge status-neutral">
-                  Latest {tableRows.length} readings
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" style={{ color: "rgb(var(--text-muted))" }} />
+                    <select
+                      value={tableFilter}
+                      onChange={(e) => setTableFilter(e.target.value as typeof tableFilter)}
+                      className="input text-sm py-1.5 px-2 w-auto"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="good">Good</option>
+                      <option value="average">Average</option>
+                      <option value="alert">Alert</option>
+                    </select>
+                  </div>
+                  <select
+                    value={tableRange}
+                    onChange={(e) => setTableRange(e.target.value as typeof tableRange)}
+                    className="input text-sm py-1.5 px-2 w-auto"
+                  >
+                    <option value="12">Last 12</option>
+                    <option value="24">Last 24</option>
+                    <option value="50">Last 50</option>
+                    <option value="100">Last 100</option>
+                  </select>
+                  <div className="badge status-neutral">
+                    {tableRows.length} reading{tableRows.length !== 1 ? "s" : ""}
+                  </div>
                 </div>
               </div>
               
@@ -480,6 +562,12 @@ function DashboardContent() {
         <SettingsModal 
           isOpen={settingsModalOpen} 
           onClose={() => setSettingsModalOpen(false)}
+          onSettingsChange={(newSettings) => {
+            // Apply settings immediately
+            if (newSettings.defaultTimeRange) {
+              setRange(newSettings.defaultTimeRange);
+            }
+          }}
         />
       </div>
     </div>

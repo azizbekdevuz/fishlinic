@@ -9,8 +9,6 @@ const nextConfig: NextConfig = {
       config.watchOptions = {
         ignored: [
           "**/mock-server/data/**",
-          "**/virtual-assistant/**/*.pt",
-          "**/virtual-assistant/audio/**",
         ],
       };
     }
