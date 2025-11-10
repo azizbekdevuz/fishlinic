@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { useAuth } from "@/app/hooks/useAuth";
 import { useEffect, useState } from "react";
-import { Home, BarChart3, Bot, Menu, X } from "lucide-react";
+import { Home, BarChart3, Bot, Menu, X, LogIn, LogOut, User } from "lucide-react";
 
 const links = [
   { href: "/", label: "Home", icon: Home },
@@ -15,6 +16,7 @@ const links = [
 export function SiteNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { user, isAuthenticated, isLoading, signOut } = useAuth();
 
   // Close menu on route change
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -72,6 +74,38 @@ export function SiteNav() {
         <div className="flex items-center gap-3">
           <ThemeToggle />
           
+          {/* Auth Controls - Desktop */}
+          {!isLoading && (
+            <div className="hidden md:flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                    <User className="w-4 h-4" style={{ color: "rgb(var(--text-muted))" }} />
+                    <span className="text-sm" style={{ color: "rgb(var(--text-primary))" }}>
+                      {user?.name || user?.email?.split("@")[0]}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => signOut()}
+                    className="btn btn-ghost btn-sm flex items-center gap-2"
+                    title="Sign out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden lg:inline">Sign Out</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/auth/signin"
+                  className="btn btn-primary btn-sm flex items-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden lg:inline">Sign In</span>
+                </Link>
+              )}
+            </div>
+          )}
+          
           {/* Mobile Menu Button */}
           <button
             className="md:hidden btn btn-ghost btn-sm"
@@ -113,6 +147,42 @@ export function SiteNav() {
               );
             })}
           </div>
+          
+          {/* Mobile Auth Controls */}
+          {!isLoading && (
+            <div className="mt-4 pt-4 border-t border-white/10">
+              {isAuthenticated ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                    <User className="w-5 h-5" style={{ color: "rgb(var(--text-muted))" }} />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium" style={{ color: "rgb(var(--text-primary))" }}>
+                        {user?.name || "User"}
+                      </div>
+                      <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
+                        {user?.email}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => signOut()}
+                    className="w-full btn btn-ghost flex items-center justify-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/auth/signin"
+                  className="w-full btn btn-primary flex items-center justify-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Link>
+              )}
+            </div>
+          )}
           
           {/* Mobile Footer */}
           <div className="mt-4 pt-4 border-t border-white/10 text-center">
