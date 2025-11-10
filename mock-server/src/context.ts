@@ -2,7 +2,7 @@ import type express from "express";
 import type http from "http";
 import type { Server as IOServer } from "socket.io";
 import type { SerialPort } from "serialport";
-import { Telemetry } from "../../app/lib/types";
+import { Telemetry } from "./types";
 import { appendTelemetry } from "./storage";
 
 export const MAX_BUFFER_SIZE = 200;

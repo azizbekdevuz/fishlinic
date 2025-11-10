@@ -26,6 +26,10 @@ import {
   Bot,
   Settings
 } from "lucide-react";
+import { ExportDataModal } from "@/app/components/ExportDataModal";
+import { AlertSettingsModal } from "@/app/components/AlertSettingsModal";
+import { AskAIModal } from "@/app/components/AskAIModal";
+import { SettingsModal } from "@/app/components/SettingsModal";
 
 // Memoized components to prevent unnecessary re-renders
 const MemoizedGauge = memo(Gauge);
@@ -44,6 +48,10 @@ export default function DashboardPage() {
   
   const [metric, setMetric] = useState<MetricKey>("overall");
   const [range, setRange] = useState<"24h" | "1w" | "1m">("1w");
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   // Memoize expensive calculations
   const status = useMemo(() => 
@@ -313,19 +321,31 @@ export default function DashboardPage() {
                   Quick Actions
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="btn btn-secondary btn-sm">
+                  <button 
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setExportModalOpen(true)}
+                  >
                     <Download className="w-4 h-4" />
                     Export Data
                   </button>
-                  <button className="btn btn-secondary btn-sm">
+                  <button 
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setAlertModalOpen(true)}
+                  >
                     <Bell className="w-4 h-4" />
                     Set Alert
                   </button>
-                  <button className="btn btn-secondary btn-sm">
+                  <button 
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setAiModalOpen(true)}
+                  >
                     <Bot className="w-4 h-4" />
                     Ask AI
                   </button>
-                  <button className="btn btn-secondary btn-sm">
+                  <button 
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setSettingsModalOpen(true)}
+                  >
                     <Settings className="w-4 h-4" />
                     Settings
                   </button>
@@ -363,7 +383,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Data Table - Memoized */}
-          <section className="animate-fade-in" style={{ animationDelay: "500ms" }}>
+          <section className="animate-fade-in" style={{ animationDelay: "500ms" }} data-telemetry-table>
             <div className="card-glass">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                 <h2 className="text-xl font-semibold" style={{ color: "rgb(var(--text-primary))" }}>
@@ -423,6 +443,27 @@ export default function DashboardPage() {
             </div>
           </div>
         </footer>
+
+        {/* Modals */}
+        <ExportDataModal 
+          isOpen={exportModalOpen} 
+          onClose={() => setExportModalOpen(false)} 
+          telemetry={telemetry}
+        />
+        <AlertSettingsModal 
+          isOpen={alertModalOpen} 
+          onClose={() => setAlertModalOpen(false)}
+          latest={latest}
+        />
+        <AskAIModal 
+          isOpen={aiModalOpen} 
+          onClose={() => setAiModalOpen(false)}
+          latest={latest}
+        />
+        <SettingsModal 
+          isOpen={settingsModalOpen} 
+          onClose={() => setSettingsModalOpen(false)}
+        />
       </div>
     </div>
   );

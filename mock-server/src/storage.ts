@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import readline from "readline";
 import { DATA_DIR } from "./config";
-import { Telemetry } from "../../app/lib/types";
+import { Telemetry } from "./types";
 
 export function ensureDataDir() {
   try {

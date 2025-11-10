@@ -17,7 +17,7 @@ export type FeederStatus = {
   schedules: FeederSchedule[];
 };
 
-export type FeederEvent = any; // passthrough; used for toasts/logs
+export type FeederEvent = Record<string, unknown>; // passthrough; used for toasts/logs
 
 function baseUrl(): string {
   const b = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:4000";
@@ -37,7 +37,8 @@ export function useFeeder() {
       if (!res.ok) return;
       const data: FeederStatus = await res.json();
       setStatus(data);
-    } catch (_) {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {}
   }, []);
 
   const listSchedules = useCallback(async () => {
@@ -46,7 +47,8 @@ export function useFeeder() {
       if (!res.ok) return;
       const data = await res.json();
       setStatus((prev) => prev ? { ...prev, schedules: data.schedules as FeederSchedule[] } : prev);
-    } catch (_) {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {}
   }, []);
 
   const addSchedule = useCallback(async (name: string | undefined, cron: string) => {
@@ -60,7 +62,8 @@ export function useFeeder() {
       });
       if (!res.ok) throw new Error("Failed to add schedule");
       await listSchedules();
-    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       setError((e as Error).message);
     } finally {
       setLoading(false);
@@ -74,7 +77,8 @@ export function useFeeder() {
       const res = await fetch(`${baseUrl()}/schedule/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete schedule");
       await listSchedules();
-    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       setError((e as Error).message);
     } finally {
       setLoading(false);

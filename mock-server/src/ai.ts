@@ -1,5 +1,5 @@
 import { AI_BASE_URL } from "./config";
-import { Telemetry } from "../../app/lib/types";
+import { Telemetry } from "./types";
 
 export async function enrichWithAI(telemetry: Telemetry): Promise<Telemetry> {
   try {

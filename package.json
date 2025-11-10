@@ -7,7 +7,7 @@
     "dev:bridge": "tsx mock-server/index.ts",
     "dev": "run-p dev:*",
     "build": "next build",
-    "build:production": "NODE_ENV=production next build",
+    "build:production": "cross-env NODE_ENV=production next build",
     "start": "next start",
     "start:prod:all": "run-p start:ui:prod start:mock:prod",
     "start:ui:prod": "cross-env NODE_ENV=production next start -p 3000",

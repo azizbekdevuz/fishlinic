@@ -1,6 +1,6 @@
 import { ctx, pushTelemetry } from "./context";
 import { enrichWithAI } from "./ai";
-import { Telemetry } from "../../app/lib/types";
+import { Telemetry } from "./types";
 
 function generateMockTelemetry(): Telemetry {
   const now = new Date();

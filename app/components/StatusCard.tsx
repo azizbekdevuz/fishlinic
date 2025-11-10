@@ -124,9 +124,18 @@ export function StatusCard({ status }: StatusCardProps) {
 
       {/* Action Button */}
       <div className="mt-4 pt-4 border-t border-white/10">
-        <button className={`btn btn-sm w-full ${
-          status === "alert" ? "btn-primary animate-glow" : "btn-ghost"
-        }`}>
+        <button 
+          className={`btn btn-sm w-full ${
+            status === "alert" ? "btn-primary animate-glow" : "btn-ghost"
+          }`}
+          onClick={() => {
+            // Scroll to telemetry table to view details
+            const tableElement = document.querySelector('[data-telemetry-table]');
+            if (tableElement) {
+              tableElement.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }}
+        >
           {status === "alert" ? (
             <>
               <AlertCircle className="w-4 h-4" />

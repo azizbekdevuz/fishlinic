@@ -1,4 +1,4 @@
-import { Telemetry } from "../../app/lib/types";
+import { Telemetry } from "./types";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
