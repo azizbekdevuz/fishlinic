@@ -1,21 +1,9 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import type { AuthJWT, AuthSession, UserData, AuthUser } from "@/app/types/auth";
+import type { AuthJWT, AuthSession, AuthUser } from "@/app/types/auth";
 import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
-
-/**
- * USER DATA STORAGE
- * 
- * Currently using in-memory Map storage:
- * - Data is stored in server memory (Map<string, UserData>)
- * - Data is LOST when server restarts
- * - For production, replace with database (PostgreSQL, MongoDB, etc.)
- * 
- * Storage location: app/api/auth/[...nextauth]/route.ts
- * Structure: Map<userId, UserData>
- */
-const users: Map<string, UserData> = new Map();
+import { prisma } from "@/app/lib/prisma";
 
 // Helper to hash password (simple implementation - use bcrypt in production)
 function hashPassword(password: string): string {
@@ -41,9 +29,12 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required");
         }
 
-        const user = Array.from(users.values()).find(
-          (u) => u.email.toLowerCase() === credentials.email.toLowerCase()
-        );
+        // Find user in database
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email.toLowerCase(),
+          },
+        });
 
         // If user exists, verify password (sign in)
         if (user) {
@@ -61,22 +52,8 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        // User doesn't exist - auto sign up (create new account)
-        // This allows seamless sign-up on first login
-        const newUser: UserData = {
-          id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          email: credentials.email.toLowerCase(),
-          password: hashPassword(credentials.password),
-          name: credentials.email.split("@")[0],
-          createdAt: new Date(),
-        };
-        users.set(newUser.id, newUser);
-        const authUser: AuthUser = {
-          id: newUser.id,
-          email: newUser.email,
-          name: newUser.name,
-        };
-        return authUser;
+        // User doesn't exist - throw error instead of auto sign-up
+        throw new Error("UserNotFound");
       },
     }),
   ],

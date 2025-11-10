@@ -64,6 +64,28 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
+      // If sign-up mode, create account first
+      if (isSignUp) {
+        const signUpResponse = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, name: email.split("@")[0] }),
+        });
+
+        const signUpData = await signUpResponse.json();
+
+        if (!signUpResponse.ok) {
+          setError(signUpData.error || "Failed to create account");
+          toast.error(signUpData.error || "Failed to create account");
+          setLoading(false);
+          return;
+        }
+
+        // Account created successfully, show success message
+        toast.success("Account created successfully! Signing you in...");
+      }
+
+      // Sign in (for both sign-in and sign-up flows)
       const result = await signIn("credentials", {
         email,
         password,
@@ -74,10 +96,16 @@ export default function SignInPage() {
         // Handle specific error types
         if (result.error === "InvalidPassword") {
           setError("Incorrect password. Please try again.");
+          toast.error("Incorrect password. Please try again.");
+        } else if (result.error === "UserNotFound") {
+          setError("No account found with this email. Please sign up first.");
+          toast.alert("No account found with this email. Please sign up to create an account.");
         } else if (result.error === "CredentialsSignin") {
           setError("Invalid email or password");
+          toast.error("Invalid email or password");
         } else {
           setError("An error occurred. Please try again.");
+          toast.error("An error occurred. Please try again.");
         }
         setLoading(false);
         return;
@@ -101,6 +129,7 @@ export default function SignInPage() {
       setLoading(false);
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
+      toast.error("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
   };
@@ -283,7 +312,7 @@ export default function SignInPage() {
           <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
             <p className="text-xs text-center" style={{ color: "rgb(var(--text-muted))" }}>
               {isSignUp 
-                ? "New accounts are created automatically on first sign in"
+                ? "Create a new account to access the dashboard"
                 : "Use your email and password to sign in"}
             </p>
           </div>

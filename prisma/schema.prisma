@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed password
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  telemetry Telemetry[]
+
+  @@map("users")
+}
+
+model Telemetry {
+  id         String   @id @default(cuid())
+  timestamp  DateTime @default(now())
+  
+  // Core measurements
+  pH         Float
+  temp_c     Float?
+  do_mg_l    Float
+  
+  // Optional fields
+  fish_health Float?
+  
+  // AI-enriched fields
+  quality_ai Float?   // 1-10 score predicted by AI
+  status_ai  String?  // good|average|alert
+  
+  // Relations
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([timestamp])
+  @@index([userId])
+  @@map("telemetry")
+}

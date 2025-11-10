@@ -60,3 +60,4 @@ virtual-assistant/.venv311
 # Misc
 *.swp
 *.swo
+/generated/prisma
