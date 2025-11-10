@@ -2,7 +2,9 @@
 
 import { ReactNode } from "react";
 import { SessionProvider } from "./SessionProvider";
+import { ToastProvider } from "@/app/contexts/ToastContext";
 import { SiteNav } from "@/app/components/SiteNav";
+import { FishToast } from "@/app/components/FishToast";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -11,8 +13,11 @@ type ProvidersProps = {
 export function Providers({ children }: ProvidersProps) {
   return (
     <SessionProvider>
-      <SiteNav />
-      <main className="min-h-screen p-6 pt-24 sm:pt-28 font-sans">{children}</main>
+      <ToastProvider>
+        <SiteNav />
+        <main className="min-h-screen p-6 pt-24 sm:pt-28 font-sans">{children}</main>
+        <FishToast />
+      </ToastProvider>
     </SessionProvider>
   );
 }

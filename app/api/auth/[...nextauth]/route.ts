@@ -4,7 +4,17 @@ import type { AuthJWT, AuthSession, UserData, AuthUser } from "@/app/types/auth"
 import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
 
-// In-memory user storage (replace with database)
+/**
+ * USER DATA STORAGE
+ * 
+ * Currently using in-memory Map storage:
+ * - Data is stored in server memory (Map<string, UserData>)
+ * - Data is LOST when server restarts
+ * - For production, replace with database (PostgreSQL, MongoDB, etc.)
+ * 
+ * Storage location: app/api/auth/[...nextauth]/route.ts
+ * Structure: Map<userId, UserData>
+ */
 const users: Map<string, UserData> = new Map();
 
 // Helper to hash password (simple implementation - use bcrypt in production)
@@ -28,42 +38,45 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error("Email and password are required");
         }
 
         const user = Array.from(users.values()).find(
-          (u) => u.email === credentials.email
+          (u) => u.email.toLowerCase() === credentials.email.toLowerCase()
         );
 
-        // Sign in: verify password
-        if (user && verifyPassword(credentials.password, user.password)) {
-          const authUser: AuthUser = {
-            id: user.id,
-            email: user.email,
-            name: user.name || user.email.split("@")[0],
-          };
-          return authUser;
+        // If user exists, verify password (sign in)
+        if (user) {
+          if (verifyPassword(credentials.password, user.password)) {
+            // Password correct - sign in successful
+            const authUser: AuthUser = {
+              id: user.id,
+              email: user.email,
+              name: user.name || user.email.split("@")[0],
+            };
+            return authUser;
+          } else {
+            // User exists but wrong password
+            throw new Error("InvalidPassword");
+          }
         }
 
-        // Sign up: create new user if email doesn't exist
-        if (!user) {
-          const newUser: UserData = {
-            id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            email: credentials.email,
-            password: hashPassword(credentials.password),
-            name: credentials.email.split("@")[0],
-            createdAt: new Date(),
-          };
-          users.set(newUser.id, newUser);
-          const authUser: AuthUser = {
-            id: newUser.id,
-            email: newUser.email,
-            name: newUser.name,
-          };
-          return authUser;
-        }
-
-        return null;
+        // User doesn't exist - auto sign up (create new account)
+        // This allows seamless sign-up on first login
+        const newUser: UserData = {
+          id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          email: credentials.email.toLowerCase(),
+          password: hashPassword(credentials.password),
+          name: credentials.email.split("@")[0],
+          createdAt: new Date(),
+        };
+        users.set(newUser.id, newUser);
+        const authUser: AuthUser = {
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+        };
+        return authUser;
       },
     }),
   ],

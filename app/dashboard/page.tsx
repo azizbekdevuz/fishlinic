@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, memo, type ChangeEvent } from "react";
+import { useMemo, useState, useCallback, memo, type ChangeEvent, useEffect, useRef } from "react";
 import { useTelemetry } from "@/app/hooks/useTelemetry";
 import { computeOverallScore, statusForReading } from "@/app/lib/status";
 import { formatDateTime } from "@/app/lib/format";
@@ -14,6 +14,10 @@ import { TelemetryTable } from "@/app/components/TelemetryTable";
 import { CameraPanel } from "../components/CameraPanel";
 import { FeederPanel } from "@/app/components/FeederPanel";
 import { SimpleGame } from "@/app/components/SimpleGame";
+import { ProtectedPage } from "@/app/components/ProtectedPage";
+import { useAuth } from "@/app/hooks/useAuth";
+import { useToast } from "@/app/hooks/useToast";
+import { getToastFromUrl } from "@/app/lib/toast-server";
 import { 
   Wifi, 
   WifiOff, 
@@ -39,7 +43,7 @@ const MemoizedStatusCard = memo(StatusCard);
 const MemoizedTelemetryTable = memo(TelemetryTable);
 const MemoizedCameraPanel = memo(CameraPanel);
 
-export default function DashboardPage() {
+function DashboardContent() {
   // Use throttled telemetry updates for better performance
   const { telemetry, latest, socketConnected, serialConnected } = useTelemetry({
     updateThrottleMs: 2000, // Update UI every 2 seconds instead of every change
@@ -52,6 +56,19 @@ export default function DashboardPage() {
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const toast = useToast();
+  const hasCheckedToast = useRef(false);
+
+  // Check for server-initiated toast (only once)
+  useEffect(() => {
+    if (!hasCheckedToast.current) {
+      hasCheckedToast.current = true;
+      const urlToast = getToastFromUrl();
+      if (urlToast) {
+        toast.show(urlToast.type as any, urlToast.message);
+      }
+    }
+  }, [toast]);
 
   // Memoize expensive calculations
   const status = useMemo(() => 
@@ -466,5 +483,13 @@ export default function DashboardPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedPage>
+      <DashboardContent />
+    </ProtectedPage>
   );
 }

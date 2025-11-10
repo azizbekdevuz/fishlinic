@@ -1,14 +1,12 @@
 "use client";
 
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import type { AuthSession, AuthUser } from "@/app/types/auth";
 import { hasAccessToken, isAuthUser } from "@/app/types/auth";
 
 export function useAuth() {
   const { data: session, status } = useSession();
-  const router = useRouter();
 
   const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated";
@@ -32,9 +30,9 @@ export function useAuth() {
       redirect: false,
       callbackUrl: "/" 
     });
-    router.push("/");
-    router.refresh();
-  }, [router]);
+    // Use window.location for reliable redirect after sign out
+    window.location.href = "/";
+  }, []);
 
   return {
     user,

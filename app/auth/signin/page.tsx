@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/app/hooks/useAuth";
+import { useToast } from "@/app/hooks/useToast";
 import Link from "next/link";
 import { 
   LogIn, 
@@ -18,12 +20,40 @@ export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const toast = useToast();
+  const hasShownRedirectToast = useRef(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+
+  // Show toast if redirected from protected page
+  useEffect(() => {
+    // Check if we were redirected from a protected route
+    const protectedPaths = ["/dashboard", "/vassistant"];
+    const isFromProtectedPage = protectedPaths.some(path => callbackUrl.startsWith(path));
+    
+    if (isFromProtectedPage && !hasShownRedirectToast.current) {
+      hasShownRedirectToast.current = true;
+      toast.alert("Please sign in to access this page");
+    }
+  }, [callbackUrl, toast]);
+
+  // Redirect if already authenticated (only once)
+  const hasRedirected = useRef(false);
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && !hasRedirected.current) {
+      hasRedirected.current = true;
+      // Use full page reload to ensure middleware sees the session
+      const targetUrl = callbackUrl.startsWith("/") 
+        ? `${window.location.origin}${callbackUrl}`
+        : callbackUrl;
+      window.location.href = targetUrl;
+    }
+  }, [isAuthenticated, authLoading, callbackUrl]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,17 +71,28 @@ export default function SignInPage() {
       });
 
       if (result?.error) {
-        setError(result.error === "CredentialsSignin" 
-          ? "Invalid email or password" 
-          : "An error occurred. Please try again.");
+        // Handle specific error types
+        if (result.error === "InvalidPassword") {
+          setError("Incorrect password. Please try again.");
+        } else if (result.error === "CredentialsSignin") {
+          setError("Invalid email or password");
+        } else {
+          setError("An error occurred. Please try again.");
+        }
         setLoading(false);
         return;
       }
 
       if (result?.ok) {
-        // Use window.location for a full page reload to ensure session is established
-        window.location.href = callbackUrl;
-        // Don't set loading to false here as we're redirecting
+        // Small delay to ensure session cookie is set
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Redirect to dashboard (or callbackUrl) with full page reload
+        // This ensures the middleware can read the session cookie
+        const targetUrl = callbackUrl.startsWith("/") 
+          ? `${window.location.origin}${callbackUrl}`
+          : callbackUrl;
+        window.location.replace(targetUrl); // Use replace instead of href to prevent back button issues
         return;
       }
 
@@ -63,6 +104,37 @@ export default function SignInPage() {
       setLoading(false);
     }
   };
+
+  // Show loading if checking auth status
+  if (authLoading) {
+    return (
+      <div className="bg-gradient-main min-h-screen flex items-center justify-center p-4 -mt-24 sm:-mt-28">
+        <div className="text-center">
+          <div className="loading w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm" style={{ color: "rgb(var(--text-secondary))" }}>
+            Loading...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show redirecting message if already authenticated
+  if (isAuthenticated) {
+    return (
+      <div className="bg-gradient-main min-h-screen flex items-center justify-center p-4 -mt-24 sm:-mt-28">
+        <div className="text-center">
+          <div className="loading w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm font-medium mb-2" style={{ color: "rgb(var(--text-primary))" }}>
+            Redirecting to dashboard...
+          </p>
+          <p className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
+            You are already signed in
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-main min-h-screen flex items-center justify-center p-4 -mt-24 sm:-mt-28">

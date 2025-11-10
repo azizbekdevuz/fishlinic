@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ProtectedPage } from "@/app/components/ProtectedPage";
+import { useToast } from "@/app/hooks/useToast";
+import { getToastFromUrl } from "@/app/lib/toast-server";
 import { 
   Bot, 
   Camera, 
@@ -37,7 +40,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-export default function VAssistantPage() {
+function VAssistantContent() {
   const [initiated, setInitiated] = useState(false);
   const [cameraRunning, setCameraRunning] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -47,6 +50,19 @@ export default function VAssistantPage() {
   const [isTyping, setIsTyping] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const toast = useToast();
+  const hasCheckedToast = useRef(false);
+
+  // Check for server-initiated toast (only once)
+  useEffect(() => {
+    if (!hasCheckedToast.current) {
+      hasCheckedToast.current = true;
+      const urlToast = getToastFromUrl();
+      if (urlToast) {
+        toast.show(urlToast.type as any, urlToast.message);
+      }
+    }
+  }, [toast]);
 
   async function refreshStatus() {
     try {
@@ -453,5 +469,13 @@ export default function VAssistantPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VAssistantPage() {
+  return (
+    <ProtectedPage>
+      <VAssistantContent />
+    </ProtectedPage>
   );
 }

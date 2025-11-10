@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { useAuth } from "@/app/hooks/useAuth";
+import { useToast } from "@/app/hooks/useToast";
 import { useEffect, useState } from "react";
-import { Home, BarChart3, Bot, Menu, X, LogIn, LogOut, User } from "lucide-react";
+import { Home, BarChart3, Bot, Menu, X, LogIn, LogOut, User, Sparkles } from "lucide-react";
 
 const links = [
   { href: "/", label: "Home", icon: Home },
@@ -17,9 +18,27 @@ export function SiteNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { user, isAuthenticated, isLoading, signOut } = useAuth();
+  const toast = useToast();
+  const [toastTypeIndex, setToastTypeIndex] = useState(0);
 
   // Close menu on route change
   useEffect(() => { setOpen(false); }, [pathname]);
+
+  // Test toast function - cycles through different types
+  const testToast = () => {
+    const types: Array<{ type: "error" | "success" | "alert" | "info" | "update" | "warning"; message: string }> = [
+      { type: "success", message: "Water quality is excellent! All parameters are optimal." },
+      { type: "error", message: "Critical alert: pH level is outside safe range!" },
+      { type: "info", message: "New telemetry data has been received." },
+      { type: "warning", message: "Temperature is slightly above optimal range." },
+      { type: "alert", message: "Dissolved oxygen levels need attention." },
+      { type: "update", message: "System update completed successfully." },
+    ];
+    
+    const current = types[toastTypeIndex];
+    toast.show(current.type, current.message, 5000);
+    setToastTypeIndex((prev) => (prev + 1) % types.length);
+  };
 
   return (
     <div className="nav-glass animate-fade-in">
@@ -72,6 +91,16 @@ export function SiteNav() {
 
         {/* Right Side Controls */}
         <div className="flex items-center gap-3">
+          {/* Test Toast Button - Desktop */}
+          <button
+            onClick={testToast}
+            className="hidden md:flex btn btn-ghost btn-sm items-center gap-2"
+            title="Test toast notification"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden lg:inline">Test Toast</span>
+          </button>
+
           <ThemeToggle />
           
           {/* Auth Controls - Desktop */}
@@ -150,7 +179,17 @@ export function SiteNav() {
           
           {/* Mobile Auth Controls */}
           {!isLoading && (
-            <div className="mt-4 pt-4 border-t border-white/10">
+            <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+              {/* Test Toast Button - Mobile */}
+              <button
+                onClick={testToast}
+                className="w-full btn btn-ghost flex items-center justify-center gap-2"
+                title="Test toast notification"
+              >
+                <Sparkles className="w-4 h-4" />
+                Test Toast
+              </button>
+
               {isAuthenticated ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">

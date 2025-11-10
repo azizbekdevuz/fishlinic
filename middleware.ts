@@ -3,16 +3,29 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    // You can add additional middleware logic here
+    const token = req.nextauth.token;
+    const pathname = req.nextUrl.pathname;
+
+    // If user is authenticated and trying to access sign-in, redirect to dashboard
+    if (token && pathname.startsWith("/auth/signin")) {
+      const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
+      const redirectUrl = callbackUrl && callbackUrl.startsWith("/") 
+        ? callbackUrl 
+        : "/dashboard";
+      return NextResponse.redirect(new URL(redirectUrl, req.url));
+    }
+
     return NextResponse.next();
   },
   {
     callbacks: {
       authorized: ({ token, req }) => {
+        const pathname = req.nextUrl.pathname;
+        
         // Protect dashboard and vassistant routes
         const protectedPaths = ["/dashboard", "/vassistant"];
         const isProtectedPath = protectedPaths.some((path) =>
-          req.nextUrl.pathname.startsWith(path)
+          pathname.startsWith(path)
         );
 
         // If accessing protected path, require authentication
@@ -20,7 +33,7 @@ export default withAuth(
           return !!token;
         }
 
-        // Allow access to public paths
+        // Allow access to public paths (including auth pages)
         return true;
       },
     },
