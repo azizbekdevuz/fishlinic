@@ -49,10 +49,16 @@ export interface AppEnvironment {
  * Validates that required variables are present
  */
 export function getOAuthConfig(): OAuthConfig {
-  const googleClientId = process.env.GOOGLE_CLIENT_ID;
-  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const kakaoClientId = process.env.KAKAO_CLIENT_ID;
-  const kakaoClientSecret = process.env.KAKAO_CLIENT_SECRET;
+  // Helper to strip quotes from env vars (some .env files have quotes)
+  const stripQuotes = (value: string | undefined): string => {
+    if (!value) return "";
+    return value.replace(/^["']|["']$/g, "");
+  };
+
+  const googleClientId = stripQuotes(process.env.GOOGLE_CLIENT_ID);
+  const googleClientSecret = stripQuotes(process.env.GOOGLE_CLIENT_SECRET);
+  const kakaoClientId = stripQuotes(process.env.KAKAO_CLIENT_ID);
+  const kakaoClientSecret = stripQuotes(process.env.KAKAO_CLIENT_SECRET);
 
   if (!googleClientId || !googleClientSecret) {
     console.warn("Google OAuth credentials not configured. Google sign-in will not work.");
@@ -64,12 +70,12 @@ export function getOAuthConfig(): OAuthConfig {
 
   return {
     google: {
-      clientId: googleClientId || "",
-      clientSecret: googleClientSecret || "",
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
     },
     kakao: {
-      clientId: kakaoClientId || "",
-      clientSecret: kakaoClientSecret || "",
+      clientId: kakaoClientId,
+      clientSecret: kakaoClientSecret,
     },
   };
 }

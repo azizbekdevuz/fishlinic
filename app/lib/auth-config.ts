@@ -5,7 +5,7 @@ import type { AuthJWT, AuthSession, AuthUser } from "@/app/types/auth";
 import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
 import { prisma } from "@/app/lib/prisma";
-import type { KakaoProfile, OAuthUserProfile, OAuthProviderConfig } from "@/app/lib/types/oauth";
+import type { KakaoProfile, OAuthUserProfile } from "@/app/lib/types/oauth";
 import { getOAuthConfig, getAppEnvironment } from "@/app/lib/types/environment";
 import { isOAuthAccount } from "@/app/lib/types/nextauth-callbacks";
 
@@ -23,18 +23,25 @@ function verifyPassword(password: string, hashed: string): boolean {
 // Custom Kakao OAuth Provider
 // NextAuth v4 compatible custom provider with proper types
 function createKakaoProvider(clientId: string, clientSecret: string) {
+  // Strip quotes if present (some .env files have quotes)
+  const cleanClientId = clientId?.replace(/^["']|["']$/g, "") || "";
+  const cleanClientSecret = clientSecret?.replace(/^["']|["']$/g, "") || "";
+
   // Validate that credentials are provided
-  if (!clientId || !clientSecret) {
+  if (!cleanClientId || !cleanClientSecret) {
     console.error("Kakao OAuth credentials are missing. Please set KAKAO_CLIENT_ID and KAKAO_CLIENT_SECRET in your environment variables.");
+    console.error(`ClientId: ${cleanClientId ? "present" : "missing"}, ClientSecret: ${cleanClientSecret ? "present" : "missing"}`);
     return null;
   }
+
 
   return {
     id: "kakao",
     name: "Kakao",
     type: "oauth" as const,
-    clientId,
-    clientSecret,
+    clientId: cleanClientId,
+    clientSecret: cleanClientSecret,
+    wellKnown: undefined, // Not using OpenID Connect
     authorization: {
       url: "https://kauth.kakao.com/oauth/authorize",
       params: {
@@ -42,8 +49,71 @@ function createKakaoProvider(clientId: string, clientSecret: string) {
         response_type: "code",
       },
     },
-    token: "https://kauth.kakao.com/oauth/token",
-    userinfo: "https://kapi.kakao.com/v2/user/me",
+    token: {
+      url: "https://kauth.kakao.com/oauth/token",
+      async request({
+        provider,
+        params,
+      }: {
+        provider: { clientId?: string; clientSecret?: string; token?: { url?: string }; id?: string };
+        params: { code?: string; redirect_uri?: string };
+        checks?: unknown;
+        client?: { callbackUrl?: string };
+      }) {
+        // Construct the redirect URI - must match exactly what's registered in Kakao console
+        // Use the redirect_uri from params (provided by NextAuth) or construct it
+        const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        // Ensure no trailing slash and exact match with Kakao console settings
+        const baseUrl = appUrl.replace(/\/$/, "");
+        const redirectUri = params.redirect_uri || `${baseUrl}/api/auth/callback/kakao`;
+        
+        // Custom token request to ensure clientId and clientSecret are included
+        const response = await fetch(provider.token?.url as string, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            grant_type: "authorization_code",
+            client_id: provider.clientId as string,
+            client_secret: provider.clientSecret as string,
+            code: params.code as string,
+            redirect_uri: redirectUri,
+          }),
+        });
+        const tokens = await response.json();
+        if (!response.ok) {
+          throw new Error(`Kakao token request failed: ${JSON.stringify(tokens)}`);
+        }
+        // Ensure tokens object has the expected structure
+        if (!tokens || typeof tokens !== "object") {
+          throw new Error("Invalid token response from Kakao");
+        }
+        return { tokens };
+      },
+    },
+    userinfo: {
+      url: "https://kapi.kakao.com/v2/user/me",
+      async request({ tokens, provider }: { tokens: { access_token?: string }; provider: { userinfo?: { url?: string } } }) {
+        // Validate access token
+        if (!tokens?.access_token) {
+          throw new Error("Missing access token for Kakao userinfo request");
+        }
+        
+        // Kakao requires Bearer token in Authorization header
+        const response = await fetch(provider.userinfo?.url as string, {
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+            "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
+          },
+        });
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => response.statusText);
+          throw new Error(`Kakao userinfo request failed: ${errorText}`);
+        }
+        return await response.json();
+      },
+    },
     profile(profile: unknown): OAuthUserProfile {
       const kakaoProfile = profile as KakaoProfile;
       return {
@@ -112,6 +182,7 @@ export const authOptions: NextAuthOptions = {
         getOAuthConfig().kakao.clientId,
         getOAuthConfig().kakao.clientSecret
       );
+      //eslint-disable-next-line @typescript-eslint/no-explicit-any
       return kakaoProvider ? [kakaoProvider as any] : [];
     })(), // Only add provider if credentials are configured
   ],
