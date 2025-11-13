@@ -38,7 +38,10 @@ export function useFeeder() {
       const data: FeederStatus = await res.json();
       setStatus(data);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {}
+    } catch (e: any) {
+      setError((e as Error).message);
+      console.error("Failed to load feeder status:", e);
+    }
   }, []);
 
   const listSchedules = useCallback(async () => {
@@ -48,7 +51,10 @@ export function useFeeder() {
       const data = await res.json();
       setStatus((prev) => prev ? { ...prev, schedules: data.schedules as FeederSchedule[] } : prev);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {}
+    } catch (e: any) {
+      setError((e as Error).message);
+      console.error("Failed to list schedules:", e);
+    }
   }, []);
 
   const addSchedule = useCallback(async (name: string | undefined, cron: string) => {

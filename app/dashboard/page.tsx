@@ -50,6 +50,7 @@ const MemoizedCameraPanel = memo(CameraPanel);
 
 function DashboardContent() {
   const { user } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { settings, isLoaded, formatTemperature } = useSettings();
   
   // Use throttled telemetry updates for better performance with user filtering
@@ -84,7 +85,7 @@ function DashboardContent() {
       hasCheckedToast.current = true;
       const urlToast = getToastFromUrl();
       if (urlToast) {
-        toast.show(urlToast.type as any, urlToast.message);
+        toast.show(urlToast.type as "success" | "error" | "info" | "warning" | "alert" | "update", urlToast.message);
       }
     }
   }, [toast]);

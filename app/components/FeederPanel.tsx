@@ -9,12 +9,18 @@ export function FeederPanel() {
   const [name, setName] = useState<string>("");
   const [time, setTime] = useState<string>("07:30");
 
-  const schedules = status?.schedules ?? [];
   const lastFeed = status?.last_feed ?? null;
 
   const disabled = loading;
 
-  const nextRuns = useMemo(() => schedules.map(s => ({ id: s.id, label: `${s.name || "(unnamed)"} • ${s.cron}`, next: s.next_run ? new Date(s.next_run).toLocaleString() : "-" })), [schedules]);
+  const nextRuns = useMemo(() => {
+    const schedules = status?.schedules ?? [];
+    return schedules.map(s => ({ 
+      id: s.id, 
+      label: `${s.name || "(unnamed)"} • ${s.cron}`, 
+      next: s.next_run ? new Date(s.next_run).toLocaleString() : "-" 
+    }));
+  }, [status?.schedules]);
 
   return (
     <div className="card-glass animate-slide-in" style={{ animationDelay: "350ms" }}>

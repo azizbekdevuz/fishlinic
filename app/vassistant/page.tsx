@@ -59,7 +59,7 @@ function VAssistantContent() {
       hasCheckedToast.current = true;
       const urlToast = getToastFromUrl();
       if (urlToast) {
-        toast.show(urlToast.type as any, urlToast.message);
+        toast.show(urlToast.type as "success" | "error" | "info" | "warning" | "alert" | "update", urlToast.message);
       }
     }
   }, [toast]);
@@ -101,7 +101,7 @@ function VAssistantContent() {
       const welcomeMsg: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
-        text: "Hello! I'm Veronica, your smart aquaculture assistant. I'm ready to help you monitor your aquarium and answer any questions you have about water quality, fish health, or system status.",
+        text: "Hey there! 👋 I'm Veronica, your AI assistant for smart aquarium management. I'm here to help you keep your aquatic environment healthy and thriving!\n\nI can help you with:\n• Understanding your water quality parameters\n• Fish health and behavior questions\n• Aquarium maintenance tips\n• Troubleshooting issues\n• And much more!\n\nFeel free to ask me anything about your aquarium, or try one of the quick actions on the left. What would you like to know?",
         ts: Date.now()
       };
       setMessages([welcomeMsg]);
@@ -112,8 +112,8 @@ function VAssistantContent() {
     }
   }
 
-  async function onAsk() {
-    const prompt = input.trim();
+  async function onAsk(promptOverride?: string) {
+    const prompt = (promptOverride || input).trim();
     if (!prompt || busy) return;
     
     const userMsg: Message = { 
@@ -123,6 +123,7 @@ function VAssistantContent() {
       ts: Date.now() 
     };
     
+    // Add user message immediately for better UX
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setBusy(true);
@@ -130,9 +131,20 @@ function VAssistantContent() {
     setError(null);
     
     try {
+      // Prepare conversation history for context (last 10 messages)
+      const historyForApi = messages
+        .slice(-10)
+        .map(msg => ({
+          role: msg.role,
+          text: msg.text
+        }));
+      
       const res = await api<{ ok: boolean; answer?: string }>("/assistant/ask", {
         method: "POST",
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ 
+          prompt,
+          history: historyForApi
+        }),
       });
       
       setIsTyping(false);
@@ -190,7 +202,7 @@ function VAssistantContent() {
       setCameraRunning(true);
       
       // Store stream for cleanup
-      (window as any).cameraStream = stream;
+      (window as Window & { cameraStream?: MediaStream }).cameraStream = stream;
     } catch (err) {
       console.error("Camera error:", err);
       setError("Camera access denied or unavailable. Please check permissions.");
@@ -204,10 +216,11 @@ function VAssistantContent() {
     setError(null);
     try {
       // Stop camera stream if exists
-      const stream = (window as any).cameraStream as MediaStream | undefined;
+      const windowWithStream = window as Window & { cameraStream?: MediaStream };
+      const stream = windowWithStream.cameraStream;
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
-        delete (window as any).cameraStream;
+        delete windowWithStream.cameraStream;
       }
       
       await api<{ ok: boolean }>("/camera/close", { method: "POST" });
@@ -335,12 +348,17 @@ function VAssistantContent() {
                   return (
                     <button
                       key={action.label}
-                      className="btn btn-ghost btn-sm w-full text-left justify-start"
+                      className="btn btn-ghost btn-sm w-full text-left justify-start hover:bg-white/10 transition-colors"
                       onClick={() => {
+                        if (!initiated) {
+                          toast.show("info", "Please initiate Veronica first");
+                          return;
+                        }
+                        // Set input for display and auto-submit with the prompt
                         setInput(action.prompt);
-                        inputRef.current?.focus();
+                        onAsk(action.prompt);
                       }}
-                      disabled={!initiated}
+                      disabled={busy || !initiated}
                     >
                       <IconComponent className="w-4 h-4" />
                       {action.label}
@@ -484,7 +502,7 @@ function VAssistantContent() {
                   />
                   <button
                     className="btn btn-primary"
-                    onClick={onAsk}
+                    onClick={() => onAsk()}
                     disabled={!initiated || busy || !input.trim()}
                   >
                     {busy ? (

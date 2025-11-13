@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Modal } from "./Modal";
-import { Bell, Save, AlertTriangle } from "lucide-react";
+import { Save } from "lucide-react";
 import type { Telemetry } from "@/app/lib/types";
 
 type AlertThresholds = {
@@ -93,7 +93,7 @@ export function AlertSettingsModal({ isOpen, onClose, latest }: AlertSettingsMod
           }}
         >
           <p className="text-sm" style={{ color: "rgb(var(--text-secondary))" }}>
-            Set custom thresholds for each metric. You'll be alerted when values go outside these ranges.
+            Set custom thresholds for each metric. You&apos;ll be alerted when values go outside these ranges.
           </p>
         </div>
 

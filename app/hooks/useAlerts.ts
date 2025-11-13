@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { Telemetry } from "@/app/lib/types";
 
 type AlertThresholds = {

@@ -21,7 +21,7 @@ export function ProtectedPage({ children, redirectTo = "/auth/signin" }: Protect
     const urlToast = getToastFromUrl();
     if (urlToast && !hasShownToast.current) {
       hasShownToast.current = true;
-      toast.show(urlToast.type as any, urlToast.message);
+      toast.show(urlToast.type as "success" | "error" | "info" | "warning" | "alert" | "update", urlToast.message);
     }
   }, [toast]);
 

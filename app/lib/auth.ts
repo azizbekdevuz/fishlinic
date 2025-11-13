@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "./auth-config";
 import type { AuthSession, AuthUser } from "@/app/types/auth";
 import { hasAccessToken, isAuthUser } from "@/app/types/auth";
 
@@ -40,4 +40,5 @@ export async function isAuthenticated(): Promise<boolean> {
   const session = await getSession();
   return !!session;
 }
+
 

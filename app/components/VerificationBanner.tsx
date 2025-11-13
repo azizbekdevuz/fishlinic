@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, X, QrCode } from "lucide-react";
+import { X, QrCode } from "lucide-react";
 import { useState } from "react";
 
 type VerificationBannerProps = {

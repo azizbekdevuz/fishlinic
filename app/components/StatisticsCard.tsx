@@ -92,6 +92,7 @@ export function StatisticsCard({ history, latest }: StatisticsCardProps) {
       </div>
       
       <div className="space-y-4">
+        {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
         {stats.map((stat, index) => {
           const TrendIcon = stat.trend === "up" ? TrendingUp : 
                            stat.trend === "down" ? TrendingDown : Minus;

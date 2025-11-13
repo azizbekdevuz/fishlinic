@@ -5,6 +5,8 @@ import { getAssistantState, setAssistantState } from "@/app/lib/assistant-state"
 // Camera functionality - simplified for web
 // In a web environment, camera is typically accessed via browser APIs
 // This endpoint just tracks the state
+
+//eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();

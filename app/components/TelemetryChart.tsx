@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef } from "react";
 import type { Telemetry } from "@/app/lib/types";
 import { TestTube, Thermometer, Wind, Eye, EyeOff } from "lucide-react";
 
@@ -140,10 +140,12 @@ export function TelemetryChart({ history, animated = true }: TelemetryChartProps
 
     const rect = svgRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const y = e.clientY - rect.top;
 
     // Find closest point
     const scaleX = chartData.width / rect.width;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const scaleY = chartData.height / rect.height;
     const scaledX = x * scaleX;
 

@@ -118,7 +118,10 @@ async function generateWaterReport(userId?: string): Promise<string | null> {
   }
 }
 
-async function askOllama(prompt: string, userId?: string): Promise<string> {
+async function askOllama(
+  prompt: string, 
+  conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = []
+): Promise<string> {
   try {
     // Check if assistant is initiated
     const state = getAssistantState();
@@ -126,25 +129,64 @@ async function askOllama(prompt: string, userId?: string): Promise<string> {
       return "Please initiate the assistant first.";
     }
 
+    // Enhanced system prompt for natural, human-like conversation
+    const systemPrompt = `You are Veronica, a friendly and knowledgeable AI assistant specializing in smart aquarium and aquaculture management. 
+
+Your personality:
+- Warm, conversational, and genuinely helpful
+- You speak naturally, like a knowledgeable friend who cares about their aquarium
+- You're enthusiastic about helping users maintain healthy aquatic environments
+- You provide detailed explanations when needed, but can also be concise
+- You use natural language, occasional emojis when appropriate (but sparingly), and friendly expressions
+- You ask follow-up questions when relevant to better understand the user's needs
+- You acknowledge the user's concerns and validate their questions
+
+Your expertise:
+- Water quality parameters (pH, temperature, dissolved oxygen, etc.)
+- Fish health and behavior
+- Aquarium maintenance and troubleshooting
+- Equipment recommendations
+- Best practices for aquaculture
+
+Guidelines:
+- Respond naturally and conversationally, as if you're having a real chat
+- Be thorough when explaining concepts, but keep it engaging
+- Use examples and analogies when helpful
+- Show empathy and understanding
+- If you don't know something, admit it honestly
+- Always prioritize the health and safety of aquatic life
+- Reference specific data when available (like current water parameters)
+
+Remember: You're not a robot giving technical manuals. You're a helpful, knowledgeable assistant who genuinely wants to help users succeed with their aquariums.`;
+
+    // Build message array with system prompt, conversation history, and current prompt
+    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+      {
+        role: "system",
+        content: systemPrompt
+      },
+      ...conversationHistory.slice(-10), // Keep last 10 messages for context (to avoid token limits)
+      {
+        role: "user",
+        content: prompt
+      }
+    ];
+
     // Call Ollama API
     const response = await fetch(`${OLLAMA_URL}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: MODEL_ID,
-        messages: [
-          {
-            role: "system",
-            content: "You are Veronica, an AI assistant for smart aquarium. Only short answers. Only English. Be helpful and concise."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        stream: false
+        messages: messages,
+        stream: false,
+        options: {
+          temperature: 0.8, // Higher temperature for more natural, varied responses
+          top_p: 0.9, // Nucleus sampling for better quality
+          top_k: 40, // Top-k sampling
+        }
       }),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
+      signal: AbortSignal.timeout(60000) // 60 second timeout for longer responses
     });
 
     if (!response.ok) {
@@ -155,7 +197,7 @@ async function askOllama(prompt: string, userId?: string): Promise<string> {
     return data.message?.content || "I couldn't process that request.";
   } catch (error) {
     console.error("Ollama error:", error);
-    return "I'm having trouble connecting to the AI service. Please check if Ollama is running.";
+    return "I'm having trouble connecting to the AI service right now. Could you try again in a moment?";
   }
 }
 
@@ -171,6 +213,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const prompt = String(body.prompt || "").trim();
+    const history = Array.isArray(body.history) ? body.history : [];
 
     if (!prompt) {
       return NextResponse.json(
@@ -192,13 +235,27 @@ export async function POST(request: NextRequest) {
     if (wantsReport) {
       const report = await generateWaterReport(session.user.id);
       if (report) {
-        return NextResponse.json({ ok: true, answer: report });
+        // Format the report more naturally
+        const naturalReport = `Here's your current water quality status:\n\n${report}\n\nWould you like me to explain any of these parameters in more detail, or help you with any specific concerns?`;
+        return NextResponse.json({ ok: true, answer: naturalReport });
       }
       // Fall through to LLM if report generation fails
     }
 
-    // Use Ollama for general questions
-    const answer = await askOllama(prompt, session.user.id);
+    // Convert history format from frontend to Ollama format
+    type HistoryMessage = { role: string; text?: string; content?: string };
+    const conversationHistory = (history as HistoryMessage[])
+      .filter((msg): msg is HistoryMessage & { role: "user" | "assistant" } => 
+        msg.role === "user" || msg.role === "assistant"
+      )
+      .map((msg) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.text || msg.content || ""
+      }))
+      .filter((msg) => msg.content.trim().length > 0);
+
+    // Use Ollama for general questions with conversation history
+    const answer = await askOllama(prompt, conversationHistory);
     return NextResponse.json({ ok: true, answer });
   } catch (error) {
     console.error("Assistant ask error:", error);
