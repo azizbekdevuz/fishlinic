@@ -3,6 +3,7 @@ import { getSession } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 import { randomUUID } from "crypto";
 
+//eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();

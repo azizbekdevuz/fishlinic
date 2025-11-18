@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useToast } from "@/app/hooks/useToast";
 import { getToastFromUrl } from "@/app/lib/toast-server";
-import { QRCodeSVG } from "qrcode.react";
+import QRCodeSVG from "react-qr-code";
 import { 
   RefreshCw, 
   Clock, 
@@ -32,7 +32,7 @@ type VerificationState =
   | { type: "success" };
 
 function VerifyContent() {
-  const { user, session, isAuthenticated, isVerified, refreshSession } = useAuth();
+  const { isAuthenticated, isVerified, refreshSession } = useAuth();
   const router = useRouter();
   const toast = useToast();
   const [state, setState] = useState<VerificationState>({ type: "idle" });
@@ -171,7 +171,6 @@ function VerifyContent() {
     if (isAuthenticated && !isVerified && state.type === "idle") {
       generateToken();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isVerified, state.type]);
 
   const handleRetry = () => {
@@ -239,8 +238,6 @@ function VerifyContent() {
                   <QRCodeSVG 
                     value={state.data.verifyUrl} 
                     size={256}
-                    level="M"
-                    includeMargin={true}
                   />
                 </div>
               </div>
