@@ -1,9 +1,10 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import type { AuthJWT } from "@/app/types/auth";
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token;
+    const token = req.nextauth.token as AuthJWT | null;
     const pathname = req.nextUrl.pathname;
 
     // If user is authenticated and trying to access sign-in, redirect to dashboard
@@ -13,6 +14,25 @@ export default withAuth(
         ? callbackUrl 
         : "/dashboard";
       return NextResponse.redirect(new URL(redirectUrl, req.url));
+    }
+
+    // Check verification for protected routes
+    const protectedPaths = ["/dashboard", "/vassistant"];
+    const isProtectedPath = protectedPaths.some((path) =>
+      pathname.startsWith(path)
+    );
+
+    if (isProtectedPath && token) {
+      // Check if user is verified
+      const isVerified = token.verifiedAt !== null && token.verifiedAt !== undefined;
+      
+      if (!isVerified) {
+        // Redirect to verify page with toast message
+        const verifyUrl = new URL("/verify", req.url);
+        verifyUrl.searchParams.set("toast", "error");
+        verifyUrl.searchParams.set("message", encodeURIComponent("Account verification required to access this page"));
+        return NextResponse.redirect(verifyUrl);
+      }
     }
 
     return NextResponse.next();
@@ -33,7 +53,7 @@ export default withAuth(
           return !!token;
         }
 
-        // Allow access to public paths (including auth pages)
+        // Allow access to public paths (including auth pages and verify page)
         return true;
       },
     },

@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useToast } from "@/app/hooks/useToast";
 import { useEffect, useState } from "react";
-import { Home, BarChart3, Bot, Menu, X, LogIn, LogOut, User, Sparkles } from "lucide-react";
+import { Home, BarChart3, Bot, Menu, X, LogIn, LogOut, User, Sparkles, CheckCircle, AlertCircle } from "lucide-react";
 
 const links = [
   { href: "/", label: "Home", icon: Home },
@@ -17,7 +17,7 @@ const links = [
 export function SiteNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const { user, isAuthenticated, isLoading, signOut } = useAuth();
+  const { user, isAuthenticated, isLoading, signOut, isVerified } = useAuth();
   const toast = useToast();
   const [toastTypeIndex, setToastTypeIndex] = useState(0);
 
@@ -113,6 +113,11 @@ export function SiteNav() {
                     <span className="text-sm" style={{ color: "rgb(var(--text-primary))" }}>
                       {user?.name || user?.email?.split("@")[0]}
                     </span>
+                    {isVerified ? (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-yellow-500" />
+                    )}
                   </div>
                   <button
                     onClick={() => signOut()}
@@ -195,12 +200,27 @@ export function SiteNav() {
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
                     <User className="w-5 h-5" style={{ color: "rgb(var(--text-muted))" }} />
                     <div className="flex-1">
-                      <div className="text-sm font-medium" style={{ color: "rgb(var(--text-primary))" }}>
-                        {user?.name || "User"}
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium" style={{ color: "rgb(var(--text-primary))" }}>
+                          {user?.name || "User"}
+                        </div>
+                        {isVerified ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <AlertCircle className="w-4 h-4 text-yellow-500" />
+                        )}
                       </div>
                       <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
                         {user?.email}
                       </div>
+                      {!isVerified && (
+                        <Link
+                          href="/verify"
+                          className="mt-2 text-xs btn btn-sm bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 border border-yellow-500/30 w-full"
+                        >
+                          Verify Account
+                        </Link>
+                      )}
                     </div>
                   </div>
                   <button

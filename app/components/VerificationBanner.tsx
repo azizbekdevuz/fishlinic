@@ -2,13 +2,13 @@
 
 import { X, QrCode } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 type VerificationBannerProps = {
   isVerified: boolean;
-  onVerifyClick?: () => void;
 };
 
-export function VerificationBanner({ isVerified, onVerifyClick }: VerificationBannerProps) {
+export function VerificationBanner({ isVerified }: VerificationBannerProps) {
   const [dismissed, setDismissed] = useState(false);
 
   if (isVerified || dismissed) return null;
@@ -29,12 +29,12 @@ export function VerificationBanner({ isVerified, onVerifyClick }: VerificationBa
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={onVerifyClick}
+            <Link
+              href="/verify"
               className="btn btn-sm bg-white text-yellow-600 hover:bg-white/90 font-semibold"
             >
               Verify Now
-            </button>
+            </Link>
             <button
               onClick={() => setDismissed(true)}
               className="text-white hover:text-white/80 transition-colors p-1"

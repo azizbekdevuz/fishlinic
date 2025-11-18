@@ -36,6 +36,7 @@ import { AskAIModal } from "@/app/components/AskAIModal";
 import { SettingsModal } from "@/app/components/SettingsModal";
 import { AlertBanner } from "@/app/components/AlertBanner";
 import { StatisticsCard } from "@/app/components/StatisticsCard";
+import { VerificationBanner } from "@/app/components/VerificationBanner";
 import { useAlerts } from "@/app/hooks/useAlerts";
 import { useSettings } from "@/app/hooks/useSettings";
 import { RefreshCw, Filter } from "lucide-react";
@@ -49,7 +50,7 @@ const MemoizedTelemetryTable = memo(TelemetryTable);
 const MemoizedCameraPanel = memo(CameraPanel);
 
 function DashboardContent() {
-  const { user } = useAuth();
+  const { user, isVerified } = useAuth();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { settings, isLoaded, formatTemperature } = useSettings();
   
@@ -265,10 +266,13 @@ function DashboardContent() {
 
   return (
     <div className="bg-gradient-main min-h-screen">
+      {/* Verification Banner */}
+      <VerificationBanner isVerified={isVerified} />
+      
       {/* Alert Banner */}
       {hasAlerts && <AlertBanner alerts={activeAlerts} />}
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl" style={{ marginTop: hasAlerts ? "60px" : "0" }}>
+      <div className="container mx-auto px-4 py-6 max-w-7xl" style={{ marginTop: (hasAlerts || !isVerified) ? "60px" : "0" }}>
         {/* Header - Memoized */}
         <header className="mb-8 animate-fade-in">
           <div className="glass-strong p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
