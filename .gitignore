@@ -45,14 +45,6 @@ build/
 venv/
 ENV/
 
-# Virtual Assistant 
-virtual-assistant/.venv311
-/virtual-assistant/env/
-/virtual-assistant/__pycache__/
-/virtual-assistant/*.pt
-/virtual-assistant/output.wav
-/virtual-assistant/audio/
-
 # AI service caches
 /ai-service/__pycache__/
 /ai-service/*.pyc
