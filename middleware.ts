@@ -7,9 +7,17 @@ export default withAuth(
     const token = req.nextauth.token as AuthJWT | null;
     const pathname = req.nextUrl.pathname;
 
-    // If user is authenticated and trying to access sign-in, redirect to dashboard
+    // If user is authenticated and trying to access sign-in, redirect appropriately
     if (token && pathname.startsWith("/auth/signin")) {
       const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
+      const isVerified = token.verifiedAt !== null && token.verifiedAt !== undefined;
+      
+      // If not verified, redirect to verify page
+      if (!isVerified) {
+        return NextResponse.redirect(new URL("/verify", req.url));
+      }
+      
+      // If verified, redirect to dashboard or callbackUrl
       const redirectUrl = callbackUrl && callbackUrl.startsWith("/") 
         ? callbackUrl 
         : "/dashboard";

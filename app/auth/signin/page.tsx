@@ -42,11 +42,12 @@ function SignInContent() {
   }, [callbackUrl, toast]);
 
   // Redirect if already authenticated (only once)
+  // Let middleware handle verification check to avoid race conditions
   const hasRedirected = useRef(false);
   useEffect(() => {
     if (!authLoading && isAuthenticated && !hasRedirected.current) {
       hasRedirected.current = true;
-      // Use full page reload to ensure middleware sees the session
+      // Always redirect to dashboard/callbackUrl - middleware will handle verification redirect
       const targetUrl = callbackUrl.startsWith("/") 
         ? `${window.location.origin}${callbackUrl}`
         : callbackUrl;
@@ -112,14 +113,21 @@ function SignInContent() {
 
       if (result?.ok) {
         // Small delay to ensure session cookie is set
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
-        // Redirect to dashboard (or callbackUrl) with full page reload
-        // This ensures the middleware can read the session cookie
+        // Refresh session to get latest verification status
+        // Then redirect based on verification status
+        // If not verified, redirect to verify page
+        // Otherwise redirect to dashboard or callbackUrl
+        const verifyUrl = `${window.location.origin}/verify`;
         const targetUrl = callbackUrl.startsWith("/") 
           ? `${window.location.origin}${callbackUrl}`
           : callbackUrl;
-        window.location.replace(targetUrl); // Use replace instead of href to prevent back button issues
+        
+        // Use replace to prevent back button issues
+        // Middleware will handle the verification check, so we can redirect to dashboard
+        // and let middleware redirect to /verify if needed
+        window.location.replace(targetUrl);
         return;
       }
 
@@ -147,14 +155,15 @@ function SignInContent() {
     );
   }
 
-  // Show redirecting message if already authenticated
-  if (isAuthenticated) {
+  // Show redirecting message if already authenticated (but only briefly, redirect will happen)
+  // Don't show this if we're in the process of redirecting to avoid flicker
+  if (isAuthenticated && !hasRedirected.current) {
     return (
       <div className="bg-gradient-main min-h-screen flex items-center justify-center p-4 -mt-24 sm:-mt-28">
         <div className="text-center">
           <div className="loading w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-sm font-medium mb-2" style={{ color: "rgb(var(--text-primary))" }}>
-            Redirecting to dashboard...
+            Redirecting...
           </p>
           <p className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
             You are already signed in
