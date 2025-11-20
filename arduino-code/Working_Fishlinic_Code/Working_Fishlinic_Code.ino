@@ -102,7 +102,7 @@ void loop() {
     Serial.print(",\"do_mg_l\":");  Serial.print(do_mgL, 2);
     Serial.print(",\"temp_c\":");   // if no temp sensor, print null
     if (isnan(TEMP_C)) Serial.print("null"); else Serial.print(TEMP_C, 1);
-    Serial.print(",\"rtc\":"); Serial.print(date);
+    // Serial.print(",\"rtc\":"); Serial.print(date); // uncomment this to print the date and time (commented to keep json compatible with mock-server reading)
     Serial.println("}");
     
     delay(1000); // 1s

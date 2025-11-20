@@ -492,7 +492,7 @@ function DashboardContent() {
                     <option value="50">Last 50</option>
                     <option value="100">Last 100</option>
                   </select>
-                  <div className="badge status-neutral">
+                <div className="badge status-neutral">
                     {tableRows.length} reading{tableRows.length !== 1 ? "s" : ""}
                   </div>
                 </div>
