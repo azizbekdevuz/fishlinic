@@ -41,6 +41,36 @@ export function useTelemetry(options?: UseTelemetryOptions) {
     }
   }, [bufferSize]);
 
+  // Load historical data from database
+  const loadHistoricalData = useCallback(async (range: string = '24h', maxRecords: number = 1000) => {
+    try {
+      const params = new URLSearchParams({
+        range,
+        max: maxRecords.toString()
+      });
+      
+      if (options?.userId) {
+        params.append('userId', options.userId);
+      }
+
+      const response = await fetch(`/api/telemetry/save?${params}`);
+      if (response.ok) {
+        const historicalData: Telemetry[] = await response.json();
+        
+        // Replace current data with historical data + any pending real-time data
+        setTelemetry(prev => {
+          const realtimeData = pendingDataRef.current;
+          const combined = [...historicalData, ...realtimeData];
+          return combined.slice(-bufferSize);
+        });
+        
+        console.log(`[telemetry] Loaded ${historicalData.length} historical records`);
+      }
+    } catch (error) {
+      console.warn('[telemetry] Failed to load historical data:', error);
+    }
+  }, [bufferSize, options?.userId]);
+
   const addTelemetryData = useCallback((payload: Telemetry) => {
     pendingDataRef.current.push(payload);
     
@@ -117,6 +147,29 @@ export function useTelemetry(options?: UseTelemetryOptions) {
     
     async function loadHistory() {
       try {
+        // Try database first (new approach)
+        const params = new URLSearchParams({
+          range: '24h',
+          max: '5000'
+        });
+        
+        if (options?.userId) {
+          params.append('userId', options.userId);
+        }
+
+        const dbRes = await fetch(`/api/telemetry/save?${params}`, { 
+          signal: controller.signal 
+        });
+        
+        if (dbRes.ok) {
+          const data: Telemetry[] = await dbRes.json();
+          setTelemetry(data.slice(-bufferSize));
+          lastUpdateRef.current = Date.now();
+          console.log(`[telemetry] Loaded ${data.length} records from database`);
+          return;
+        }
+
+        // Fallback to mock server (existing approach)
         const baseUrl = process.env.NEXT_PUBLIC_WS_URL?.replace(/\/$/, "") || "http://localhost:4000";
         const userId = options?.userId;
         const url = userId 
@@ -132,6 +185,7 @@ export function useTelemetry(options?: UseTelemetryOptions) {
         const data: Telemetry[] = await res.json();
         setTelemetry(data.slice(-bufferSize));
         lastUpdateRef.current = Date.now();
+        console.log(`[telemetry] Loaded ${data.length} records from mock server`);
       } catch (error) {
         // Ignore abort errors
         if (error instanceof Error && error.name !== 'AbortError') {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import type { Telemetry } from "@/app/lib/types";
+import { playAlertSound } from "@/app/lib/sound";
 
 type AlertThresholds = {
   pH: { min: number; max: number; enabled: boolean };
@@ -28,13 +29,33 @@ export type ActiveAlert = {
 export function useAlerts(latest?: Telemetry) {
   const [thresholds, setThresholds] = useState<AlertThresholds>(DEFAULT_THRESHOLDS);
   const [activeAlerts, setActiveAlerts] = useState<ActiveAlert[]>([]);
+  const [notificationSettings, setNotificationSettings] = useState({
+    soundEnabled: false,
+    toastEnabled: true
+  });
+  const lastAlertTimeRef = useRef<number>(0);
+  const prevAlertsRef = useRef<ActiveAlert[]>([]);
+  const alertCooldownMs = 5000; // 5 seconds between sound alerts
 
-  // Load thresholds from localStorage
+  // Load thresholds and notification settings from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("alertThresholds");
     if (saved) {
       try {
         setThresholds(JSON.parse(saved));
+      } catch {
+        // Use defaults if parse fails
+      }
+    }
+
+    const savedNotifications = localStorage.getItem("notificationSettings");
+    if (savedNotifications) {
+      try {
+        const parsed = JSON.parse(savedNotifications);
+        setNotificationSettings({
+          soundEnabled: parsed.soundEnabled || false,
+          toastEnabled: parsed.toastEnabled !== false // default to true
+        });
       } catch {
         // Use defaults if parse fails
       }
@@ -109,8 +130,33 @@ export function useAlerts(latest?: Telemetry) {
   // Update active alerts when telemetry or thresholds change
   useEffect(() => {
     const alerts = checkAlerts(latest, thresholds);
+    const prevAlerts = prevAlertsRef.current;
+    const prevAlertCount = prevAlerts.length;
+    const newCriticalAlerts = alerts.filter(a => a.severity === "alert");
+    const hadCriticalAlerts = prevAlerts.some(a => a.severity === "alert");
+    
+    // Update refs before state to avoid stale closures
+    prevAlertsRef.current = alerts;
     setActiveAlerts(alerts);
-  }, [latest, thresholds, checkAlerts]);
+
+    // Play sound for new critical alerts (with cooldown)
+    if (notificationSettings.soundEnabled && 
+        newCriticalAlerts.length > 0 && 
+        !hadCriticalAlerts && 
+        Date.now() - lastAlertTimeRef.current > alertCooldownMs) {
+      
+      playAlertSound('alert');
+      lastAlertTimeRef.current = Date.now();
+    }
+    // Play sound for new warnings (with cooldown)
+    else if (notificationSettings.soundEnabled && 
+             alerts.length > prevAlertCount && 
+             Date.now() - lastAlertTimeRef.current > alertCooldownMs) {
+      
+      playAlertSound('warning');
+      lastAlertTimeRef.current = Date.now();
+    }
+  }, [latest, thresholds, checkAlerts, notificationSettings.soundEnabled, alertCooldownMs]);
 
   const hasAlerts = activeAlerts.length > 0;
   const hasCriticalAlerts = activeAlerts.some(a => a.severity === "alert");
@@ -120,7 +166,8 @@ export function useAlerts(latest?: Telemetry) {
     hasAlerts,
     hasCriticalAlerts,
     thresholds,
-    setThresholds
+    setThresholds,
+    notificationSettings
   };
 }
 

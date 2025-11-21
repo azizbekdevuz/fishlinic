@@ -57,7 +57,7 @@ function DashboardContent() {
   // Use throttled telemetry updates for better performance with user filtering
   const { telemetry, latest, socketConnected, serialConnected, refresh } = useTelemetry({
     updateThrottleMs: settings.refreshInterval * 1000 || 2000,
-    bufferSize: 150,
+    bufferSize: settings.bufferSize || 100,
     userId: user?.id // Filter by user ID
   });
   
@@ -109,10 +109,16 @@ function DashboardContent() {
         value: latest.pH,
         min: 0, max: 14, decimals: 2, label: "pH Level"
       },
-      temp: {
-        value: latest.temp_c,
-        min: 0, max: 40, decimals: 1, label: "Temperature (°C)"
-      },
+      temp: (() => {
+        const tempFormatted = formatTemperature(latest.temp_c || 0);
+        return {
+          value: tempFormatted.value,
+          min: settings.temperatureUnit === "fahrenheit" ? 32 : 0,
+          max: settings.temperatureUnit === "fahrenheit" ? 104 : 40,
+          decimals: 1,
+          label: `Temperature (${tempFormatted.unit})`
+        };
+      })(),
       DO: {
         value: latest.do_mg_l,
         min: 0, max: 12, decimals: 2, label: "Dissolved Oxygen (mg/L)"
@@ -136,8 +142,9 @@ function DashboardContent() {
       .filter(s => new Date(s.timestamp).getTime() >= historyCutoffMs)
       .slice(-pointsCount);
     
-    // Filter table rows by count and status
-    let filteredRows = telemetry.slice(-parseInt(tableRange)).reverse();
+    // Filter table rows by count and status (use settings pagination if tableRange is default)
+    const rowCount = tableRange === "12" ? settings.tablePagination || 25 : parseInt(tableRange);
+    let filteredRows = telemetry.slice(-rowCount).reverse();
     
     if (tableFilter !== "all") {
       filteredRows = filteredRows.filter(row => {
@@ -379,7 +386,14 @@ function DashboardContent() {
                   </select>
                 </div>
                 <div className="h-64 sm:h-80 rounded-xl border border-white/10 bg-white/5 p-4">
-                  <MemoizedTelemetryChart history={history} animated={settings.chartAnimation} />
+                  <MemoizedTelemetryChart 
+                    history={history} 
+                    animated={settings.chartAnimation}
+                    chartType={settings.chartType}
+                    showGridLines={settings.showGridLines}
+                    showDataPoints={settings.showDataPoints}
+                    animationSpeed={settings.animationSpeed}
+                  />
                 </div>
                 <p className="text-xs mt-4" style={{ color: "rgb(var(--text-muted))" }}>
                   Showing {history.length} data points from the last {range === "24h" ? "24 hours" : range === "1w" ? "week" : "month"}

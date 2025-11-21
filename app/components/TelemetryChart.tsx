@@ -7,6 +7,10 @@ import { TestTube, Thermometer, Wind, Eye, EyeOff } from "lucide-react";
 type TelemetryChartProps = {
   history: Telemetry[];
   animated?: boolean;
+  chartType?: "line" | "area" | "bar";
+  showGridLines?: boolean;
+  showDataPoints?: boolean;
+  animationSpeed?: "slow" | "normal" | "fast";
 };
 
 type MetricType = 'pH' | 'temp' | 'do';
@@ -24,11 +28,27 @@ type ChartPoint = {
   };
 };
 
-export function TelemetryChart({ history, animated = true }: TelemetryChartProps) {
+export function TelemetryChart({ 
+  history, 
+  animated = true, 
+  chartType = "line",
+  showGridLines = true,
+  showDataPoints = true,
+  animationSpeed = "normal"
+}: TelemetryChartProps) {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<MetricType>>(new Set(['pH', 'temp', 'do']));
   const [hoveredPoint, setHoveredPoint] = useState<ChartPoint | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // Animation duration based on speed setting
+  const animationDuration = useMemo(() => {
+    switch (animationSpeed) {
+      case "slow": return "2s";
+      case "fast": return "0.5s";
+      default: return "1s";
+    }
+  }, [animationSpeed]);
 
   const chartData = useMemo(() => {
     if (history.length === 0) return null;
@@ -304,7 +324,7 @@ export function TelemetryChart({ history, animated = true }: TelemetryChartProps
           </defs>
           
           {/* Background Grid */}
-          <rect width="100%" height="100%" fill="url(#grid)" opacity="0.4"/>
+          {showGridLines && <rect width="100%" height="100%" fill="url(#grid)" opacity="0.4"/>}
           
           {/* Chart Lines with better styling */}
           {visibleMetrics.has('pH') && (
@@ -318,7 +338,7 @@ export function TelemetryChart({ history, animated = true }: TelemetryChartProps
               className={animated ? "animate-draw" : ""}
               style={{ 
                 filter: 'drop-shadow(0 2px 8px rgba(16, 185, 129, 0.4))',
-                animation: animated ? 'draw 1s ease-out' : 'none'
+                animation: animated ? `draw ${animationDuration} ease-out` : 'none'
               }}
             />
           )}
@@ -334,7 +354,7 @@ export function TelemetryChart({ history, animated = true }: TelemetryChartProps
               className={animated ? "animate-draw" : ""}
               style={{ 
                 filter: 'drop-shadow(0 2px 8px rgba(245, 158, 11, 0.4))',
-                animation: animated ? 'draw 1s ease-out' : 'none'
+                animation: animated ? `draw ${animationDuration} ease-out` : 'none'
               }}
             />
           )}
@@ -350,10 +370,43 @@ export function TelemetryChart({ history, animated = true }: TelemetryChartProps
               className={animated ? "animate-draw" : ""}
               style={{ 
                 filter: 'drop-shadow(0 2px 8px rgba(59, 130, 246, 0.4))',
-                animation: animated ? 'draw 1s ease-out' : 'none'
+                animation: animated ? `draw ${animationDuration} ease-out` : 'none'
               }}
             />
           )}
+
+          {/* Static data points */}
+          {showDataPoints && chartData.points.map((point, index) => (
+            <g key={index}>
+              {visibleMetrics.has('pH') && (
+                <circle
+                  cx={point.x}
+                  cy={point.ph}
+                  r="2"
+                  fill="#10b981"
+                  opacity="0.8"
+                />
+              )}
+              {visibleMetrics.has('temp') && (
+                <circle
+                  cx={point.x}
+                  cy={point.temp}
+                  r="2"
+                  fill="#f59e0b"
+                  opacity="0.8"
+                />
+              )}
+              {visibleMetrics.has('do') && (
+                <circle
+                  cx={point.x}
+                  cy={point.do}
+                  r="2"
+                  fill="#3b82f6"
+                  opacity="0.8"
+                />
+              )}
+            </g>
+          ))}
 
           {/* Hover indicator line */}
           {hoveredPoint && (

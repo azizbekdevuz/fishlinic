@@ -25,6 +25,26 @@ export const ctx: {
   serialPort: null,
 };
 
+// Save telemetry to database via API
+async function saveTelemetryToDatabase(t: Telemetry) {
+  try {
+    const response = await fetch('http://localhost:3000/api/telemetry/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(t)
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.warn('[db] Failed to save telemetry to database:', error);
+    }
+  } catch (error) {
+    console.warn('[db] Database save error:', error);
+  }
+}
+
 export function pushTelemetry(t: Telemetry) {
   ctx.latestTelemetry = t;
   ctx.telemetryBuffer.push(t);
@@ -35,7 +55,12 @@ export function pushTelemetry(t: Telemetry) {
     ctx.io.emit("telemetry", t);
     ctx.io.emit("telemetry:update", t);
   }
+  
+  // Save to both file storage (existing) and database (new)
   appendTelemetry(t);
+  saveTelemetryToDatabase(t).catch(err => {
+    console.warn('[db] Async database save failed:', err);
+  });
 }
 
 

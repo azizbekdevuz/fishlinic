@@ -8,6 +8,15 @@ export type DashboardSettings = {
   autoRefresh: boolean;
   refreshInterval: number; // in seconds
   chartAnimation: boolean;
+  // Display settings
+  chartType: "line" | "area" | "bar";
+  tablePagination: 10 | 25 | 50 | 100;
+  compactMode: boolean;
+  showGridLines: boolean;
+  showDataPoints: boolean;
+  animationSpeed: "slow" | "normal" | "fast";
+  // Data buffer
+  bufferSize: 50 | 100 | 200;
 };
 
 const DEFAULT_SETTINGS: DashboardSettings = {
@@ -15,7 +24,16 @@ const DEFAULT_SETTINGS: DashboardSettings = {
   defaultTimeRange: "1w",
   autoRefresh: true,
   refreshInterval: 5,
-  chartAnimation: true
+  chartAnimation: true,
+  // Display settings
+  chartType: "line",
+  tablePagination: 25,
+  compactMode: false,
+  showGridLines: true,
+  showDataPoints: true,
+  animationSpeed: "normal",
+  // Data buffer
+  bufferSize: 100
 };
 
 export function useSettings() {
