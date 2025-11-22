@@ -16,6 +16,11 @@ export interface AuthUser {
   id: string;
   email: string;
   name?: string | null;
+  image?: string | null; // OAuth provider profile picture or uploaded avatar
+  avatarUrl?: string | null; // Uploaded avatar URL
+  verifiedAt?: string | null; // ISO date string when user was verified
+  createdAt?: string | null; // ISO date string when user was created
+  updatedAt?: string | null; // ISO date string when user was last updated
 }
 
 /**

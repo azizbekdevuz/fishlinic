@@ -235,10 +235,15 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }): Promise<JWT> {
       // Initial sign in
       if (user && "id" in user && typeof user.id === "string") {
-        // Fetch user from DB to get verification status
+        // Fetch user from DB to get verification status and other fields
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { verifiedAt: true }
+          select: { 
+            verifiedAt: true,
+            avatarUrl: true,
+            createdAt: true,
+            updatedAt: true
+          }
         });
         
         const authToken: AuthJWT = {
@@ -253,14 +258,20 @@ export const authOptions: NextAuthOptions = {
         return authToken as JWT;
       }
       
-      // Refresh verification status on token refresh (every request)
+      // Refresh user data on token refresh (every request)
       if (token && "id" in token && typeof token.id === "string") {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id },
-          select: { verifiedAt: true }
+          select: { 
+            verifiedAt: true,
+            avatarUrl: true,
+            name: true,
+            updatedAt: true
+          }
         });
         return {
           ...token,
+          name: dbUser?.name ?? token.name,
           verifiedAt: dbUser?.verifiedAt?.toISOString() ?? null,
         } as JWT;
       }
@@ -269,15 +280,32 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }): Promise<Session> {
       if (token && "id" in token && typeof token.id === "string") {
+        // Fetch latest user data for session
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { 
+            avatarUrl: true,
+            createdAt: true,
+            updatedAt: true,
+            verifiedAt: true,
+            name: true
+          }
+        });
+
         const authSession: AuthSession = {
           ...session,
           user: {
             id: token.id,
             email: token.email ?? "",
-            name: token.name ?? null,
+            name: dbUser?.name ?? token.name ?? null,
+            image: dbUser?.avatarUrl ?? null,
+            avatarUrl: dbUser?.avatarUrl ?? null,
+            verifiedAt: dbUser?.verifiedAt?.toISOString() ?? null,
+            createdAt: dbUser?.createdAt?.toISOString() ?? null,
+            updatedAt: dbUser?.updatedAt?.toISOString() ?? null,
           },
           accessToken: typeof token.accessToken === "string" ? token.accessToken : undefined,
-          verifiedAt: typeof token.verifiedAt === "string" ? token.verifiedAt : null,
+          verifiedAt: dbUser?.verifiedAt?.toISOString() ?? null,
         };
         return authSession as Session;
       }
