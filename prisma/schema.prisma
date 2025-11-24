@@ -69,3 +69,14 @@ model Telemetry {
   @@index([userId])
   @@map("telemetry")
 }
+
+model Chat_History {
+  id        String   @id @default(cuid())
+  device_id String
+  message   String   // JSON string containing chat messages
+  createdAt DateTime @default(now())
+  
+  @@index([device_id])
+  @@index([createdAt])
+  @@map("chat_history")
+}
