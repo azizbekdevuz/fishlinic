@@ -21,7 +21,7 @@ type ActivityItem = {
   type: "login" | "settings" | "export" | "upload" | "verification" | "profile" | "alert";
   description: string;
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 };
 
 export function ProfileActivity() {
@@ -142,7 +142,7 @@ export function ProfileActivity() {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return formatDateTime(time).split(' ')[0]; // Just the date
+    return formatDateTime(time.toISOString()).split(' ')[0]; // Just the date
   };
 
   if (isLoading) {

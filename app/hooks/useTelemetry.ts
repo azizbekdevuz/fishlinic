@@ -41,7 +41,8 @@ export function useTelemetry(options?: UseTelemetryOptions) {
     }
   }, [bufferSize]);
 
-  // Load historical data from database
+  // Load historical data from database - currently unused
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const loadHistoricalData = useCallback(async (range: string = '24h', maxRecords: number = 1000) => {
     try {
       const params = new URLSearchParams({
@@ -58,7 +59,7 @@ export function useTelemetry(options?: UseTelemetryOptions) {
         const historicalData: Telemetry[] = await response.json();
         
         // Replace current data with historical data + any pending real-time data
-        setTelemetry(prev => {
+        setTelemetry(() => {
           const realtimeData = pendingDataRef.current;
           const combined = [...historicalData, ...realtimeData];
           return combined.slice(-bufferSize);

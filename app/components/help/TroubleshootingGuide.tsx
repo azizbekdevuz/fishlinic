@@ -21,7 +21,7 @@ type TroubleshootingItem = {
   id: string;
   title: string;
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   steps: string[];
   keywords: string[];
@@ -70,7 +70,7 @@ export function TroubleshootingGuide({ searchQuery }: TroubleshootingGuideProps)
       icon: Bot,
       color: "text-purple-400",
       steps: [
-        "Click 'Initiate Assistant' to start a new session",
+        "Click &apos;Initiate Assistant&apos; to start a new session",
         "Check if Ollama is running and accessible",
         "Verify your account is verified",
         "Try asking simpler questions first",
@@ -107,7 +107,7 @@ export function TroubleshootingGuide({ searchQuery }: TroubleshootingGuideProps)
         "Clear browser cookies and cache",
         "Disable browser extensions that might interfere",
         "Check if Caps Lock is on",
-        "Reset your password if you've forgotten it"
+        "Reset your password if you&apos;ve forgotten it"
       ],
       keywords: ["login", "signin", "authentication", "password", "oauth", "google", "kakao"]
     },
@@ -227,7 +227,7 @@ export function TroubleshootingGuide({ searchQuery }: TroubleshootingGuideProps)
         <ul className="text-xs space-y-1" style={{ color: "rgb(var(--text-muted))" }}>
           <li>• Try refreshing the page or restarting your browser</li>
           <li>• Check the browser console (F12) for error messages</li>
-          <li>• Ensure you're using a supported browser (Chrome, Firefox, Safari, Edge)</li>
+          <li>• Ensure you&apos;re using a supported browser (Chrome, Firefox, Safari, Edge)</li>
           <li>• Disable ad blockers or privacy extensions temporarily</li>
           <li>• Contact support if problems persist after trying these steps</li>
         </ul>

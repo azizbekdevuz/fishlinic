@@ -241,7 +241,7 @@ async function listSerialPorts(): Promise<Awaited<ReturnType<typeof SerialPort.l
     return ports;
   } catch (e) {
     console.error("[serial] list failed:", e instanceof Error ? e.message : String(e));
-    return [] as any;
+    return [] as Awaited<ReturnType<typeof SerialPort.list>>;
   }
 }
 
@@ -273,7 +273,6 @@ let isMockMode = false;
 
 function generateMockTelemetry(): Telemetry {
   const now = new Date();
-  const baseTime = now.getTime();
   
   // Generate realistic water quality data with some variation
   const basePH = 7.2;
@@ -312,8 +311,8 @@ async function enrichWithAI(telemetry: Telemetry): Promise<Telemetry> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pH: telemetry.pH, temp_c: telemetry.temp_c, do_mg_l: telemetry.do_mg_l }),
-      signal: controller.signal as any
-    } as any);
+      signal: controller.signal as AbortSignal
+    });
     clearTimeout(timeout);
     if (res.ok) {
       const data = await res.json();
@@ -469,8 +468,8 @@ async function startSerialLoop() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ pH: t.pH, temp_c: t.temp_c, do_mg_l: t.do_mg_l }),
-            signal: controller.signal as any
-          } as any);
+            signal: controller.signal as AbortSignal
+          });
           clearTimeout(timeout);
           if (res.ok) {
             const data = await res.json();

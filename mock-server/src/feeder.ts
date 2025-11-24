@@ -19,14 +19,14 @@ function logFeed(entry: FeedLog) {
   dbInsertFeedLog(entry).catch(() => {});
 }
 
-function addSchedule(hh: number, mm: number, id: string, name?: string) {
+function addSchedule(hh: number, mm: number, id: string, ) {
   const job = new CronJob(`${mm} ${hh} * * *`, () => {
     const duration = 1.0;
     try {
       writeSerialJson({ cmd: "feed", duration });
       logFeed({ ts: new Date().toISOString(), source: "scheduler", ok: true, duration });
     } catch (e) {
-      logFeed({ ts: new Date().toISOString(), source: "scheduler", ok: false, msg: (e as any)?.message });
+      logFeed({ ts: new Date().toISOString(), source: "scheduler", ok: false, msg: (e as Error)?.message });
     }
   }, null, true);
   jobs.set(id, job);
@@ -43,7 +43,7 @@ export function attachFeeder(app: express.Express) {
       logFeed({ ts: new Date().toISOString(), source, ok: true, duration });
       res.json({ status: "ok", action: "feed", duration, timestamp: new Date().toISOString() });
     } catch (e) {
-      const msg = (e as any)?.message || String(e);
+      const msg = (e as Error)?.message || String(e);
       logFeed({ ts: new Date().toISOString(), source, ok: false, msg });
       res.status(500).json({ status: "error", error: msg });
     }
@@ -57,7 +57,7 @@ export function attachFeeder(app: express.Express) {
     const [hh, mm] = cron.split(":").map(Number);
     const id = crypto.randomUUID();
     schedules.push({ id, name, hh, mm });
-    addSchedule(hh, mm, id, name);
+    addSchedule(hh, mm, id);
     dbInsertSchedule({ id, name: name ?? null, hh, mm }).catch(() => {});
     res.json({ status: "ok", id, name, cron });
   });
@@ -66,6 +66,7 @@ export function attachFeeder(app: express.Express) {
     const out = schedules.map((s) => {
       const job = jobs.get(s.id);
       const cron = `${String(s.hh).padStart(2, "0")}:${String(s.mm).padStart(2, "0")}`;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nd: any = (job as any)?.nextDates?.();
       const next_run = nd?.toJSDate?.()?.toISOString?.() ?? nd?.toDate?.()?.toISOString?.() ?? null;
       return { id: s.id, name: s.name, cron, next_run };
@@ -93,6 +94,7 @@ export function attachFeeder(app: express.Express) {
     const out = schedules.map((s) => {
       const job = jobs.get(s.id);
       const cron = `${String(s.hh).padStart(2, "0")}:${String(s.mm).padStart(2, "0")}`;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nd: any = (job as any)?.nextDates?.();
       const next_run = nd?.toJSDate?.()?.toISOString?.() ?? nd?.toDate?.()?.toISOString?.() ?? null;
       return { id: s.id, name: s.name, cron, next_run };
@@ -112,12 +114,12 @@ export async function initFeederPersistence() {
     for (const r of rows) {
       if (!schedules.find(s => s.id === r.id)) {
         schedules.push({ id: r.id, name: r.name ?? undefined, hh: r.hh, mm: r.mm });
-        addSchedule(r.hh, r.mm, r.id, r.name ?? undefined);
+        addSchedule(r.hh, r.mm, r.id);
       }
     }
     console.log(`[feeder] loaded ${rows.length} schedules from DB`);
   } catch (e) {
-    console.warn("[feeder] persistence load failed:", (e as any)?.message || e);
+    console.warn("[feeder] persistence load failed:", (e as Error)?.message || e);
   }
 }
 

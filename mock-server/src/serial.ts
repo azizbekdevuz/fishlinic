@@ -12,7 +12,7 @@ export async function listSerialPorts() {
     return ports;
   } catch (e) {
     console.error("[serial] list failed:", e instanceof Error ? e.message : String(e));
-    return [] as any;
+    return [] as Awaited<ReturnType<typeof SerialPort.list>>;
   }
 }
 
@@ -36,16 +36,16 @@ async function openSerial(): Promise<SerialPort> {
   const ports = await listSerialPorts();
   console.log("[serial] available ports:");
   for (const p of ports) {
-    console.log("  -", (p as any).path, JSON.stringify({ manufacturer: (p as any).manufacturer, vendorId: (p as any).vendorId, productId: (p as any).productId }));
+    console.log("  -", (p as unknown as Record<string, unknown>).path, JSON.stringify({ manufacturer: (p as unknown as Record<string, unknown>).manufacturer, vendorId: (p as unknown as Record<string, unknown>).vendorId, productId: (p as unknown as Record<string, unknown>).productId }));
   }
   const guess =
-    (ports as any).find((p: any) =>
+    (ports as unknown as Record<string, unknown>[]).find((p: Record<string, unknown>) =>
       /arduino|wch|usb|ch340|silabs|ftdi|usb-serial|uno|mega|nano/i.test(
         [p.manufacturer, p.vendorId, p.productId, p.path, p.pnpId].filter(Boolean).join(" ")
       )
-    ) || (ports as any)[0];
+    ) || (ports as unknown as Record<string, unknown>[])[0];
   if (!guess) throw new Error("No serial device found. Set SERIAL_PATH=COM3 or /dev/ttyACM0");
-  const chosen = normalizeWindowsComPath(guess.path!);
+  const chosen = normalizeWindowsComPath(guess.path as string);
   console.log("[serial] auto-picked", guess.path, "=>", chosen);
   return new SerialPort({ path: chosen, baudRate: SERIAL_BAUD });
 }
@@ -73,7 +73,7 @@ export async function startSerialLoop() {
     parser.on("data", async (line: string) => {
       try {
         const parsed: unknown = JSON.parse(line);
-        if (parsed && typeof parsed === "object" && (parsed as any)["ack"]) {
+        if (parsed && typeof parsed === "object" && (parsed as Record<string, unknown>)["ack"]) {
           ctx.io?.emit("feeder:event", parsed);
           return;
         }
@@ -85,7 +85,7 @@ export async function startSerialLoop() {
       } catch {}
     });
     ctx.serialPort.on("error", (e) => {
-      console.error("[serial] error:", (e as any).message);
+      console.error("[serial] error:", (e as Error).message);
       emitSerialStatus("disconnected");
       if (!ctx.isMockMode) {
         console.log("[serial] starting mock data generation due to serial error");

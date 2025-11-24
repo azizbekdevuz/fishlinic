@@ -3,11 +3,11 @@
 import { useState, useRef } from "react";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useToast } from "@/app/hooks/useToast";
+import Image from "next/image";
 import { 
   Camera, 
   Upload, 
   Trash2, 
-  User,
   CheckCircle,
   AlertCircle
 } from "lucide-react";
@@ -109,9 +109,11 @@ export function ProfileAvatar() {
         <div className="relative inline-block mb-4">
           <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
             {avatarUrl ? (
-              <img
+              <Image
                 src={avatarUrl}
                 alt="Profile"
+                width={128}
+                height={128}
                 className="w-full h-full object-cover"
                 onError={() => setAvatarUrl(null)}
               />

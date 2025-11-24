@@ -119,7 +119,7 @@ function SignInContent() {
         // Then redirect based on verification status
         // If not verified, redirect to verify page
         // Otherwise redirect to dashboard or callbackUrl
-        const verifyUrl = `${window.location.origin}/verify`;
+        // const verifyUrl = `${window.location.origin}/verify`;
         const targetUrl = callbackUrl.startsWith("/") 
           ? `${window.location.origin}${callbackUrl}`
           : callbackUrl;

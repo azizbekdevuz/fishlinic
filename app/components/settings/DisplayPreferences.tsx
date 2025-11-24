@@ -146,7 +146,7 @@ export function DisplayPreferences() {
           ].map((option) => (
             <button
               key={option.value}
-              onClick={() => updateSetting("chartType", option.value as any)}
+              onClick={() => updateSetting("chartType", option.value as "line" | "area" | "bar")}
               className={`p-3 rounded-lg border transition-all duration-200 ${
                 localSettings.chartType === option.value
                   ? "bg-blue-500/20 border-blue-500 text-blue-400"
@@ -232,7 +232,7 @@ export function DisplayPreferences() {
           ].map((option) => (
             <button
               key={option.value}
-              onClick={() => updateSetting("animationSpeed", option.value as any)}
+              onClick={() => updateSetting("animationSpeed", option.value as "slow" | "normal" | "fast")}
               className={`p-3 rounded-lg border transition-all duration-200 ${
                 localSettings.animationSpeed === option.value
                   ? "bg-blue-500/20 border-blue-500 text-blue-400"
@@ -259,7 +259,7 @@ export function DisplayPreferences() {
           {[10, 25, 50, 100].map((size) => (
             <button
               key={size}
-              onClick={() => updateSetting("tablePagination", size as any)}
+              onClick={() => updateSetting("tablePagination", size as 10 | 25 | 50 | 100)}
               className={`p-3 rounded-lg border transition-all duration-200 ${
                 localSettings.tablePagination === size
                   ? "bg-blue-500/20 border-blue-500 text-blue-400"

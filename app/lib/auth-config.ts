@@ -255,7 +255,7 @@ export const authOptions: NextAuthOptions = {
           accessToken: `bearer_${user.id}_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`,
           verifiedAt: dbUser?.verifiedAt?.toISOString() ?? null,
         };
-        return authToken as JWT;
+        return authToken as unknown as JWT;
       }
       
       // Refresh user data on token refresh (every request)

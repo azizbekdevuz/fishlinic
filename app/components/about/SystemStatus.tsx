@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Activity, 
   CheckCircle, 
@@ -18,7 +18,7 @@ type ServiceStatus = {
   status: "operational" | "degraded" | "down";
   responseTime?: number;
   lastChecked: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
 };
 
 export function SystemStatus() {
@@ -26,13 +26,7 @@ export function SystemStatus() {
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string>("");
 
-  useEffect(() => {
-    checkSystemStatus();
-    const interval = setInterval(checkSystemStatus, 30000); // Check every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  const checkSystemStatus = async () => {
+  const checkSystemStatus = useCallback(async () => {
     setIsLoading(true);
     
     try {
@@ -82,7 +76,13 @@ export function SystemStatus() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+  
+  useEffect(() => {
+    checkSystemStatus();
+    const interval = setInterval(checkSystemStatus, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, [checkSystemStatus]);
 
   const checkWebServer = async (): Promise<number> => {
     const start = Date.now();
@@ -205,7 +205,7 @@ export function SystemStatus() {
           return (
             <div key={service.name} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
               <div className="flex items-center gap-3">
-                <IconComponent className="w-5 h-5" style={{ color: "rgb(var(--text-primary))" }} />
+                <IconComponent className="w-5 h-5 text-primary" />
                 <div>
                   <div className="font-medium text-sm" style={{ color: "rgb(var(--text-primary))" }}>
                     {service.name}

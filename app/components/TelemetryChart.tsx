@@ -31,11 +31,13 @@ type ChartPoint = {
 export function TelemetryChart({ 
   history, 
   animated = true, 
-  chartType = "line",
+  chartType = "line", // TODO: Implement different chart types
   showGridLines = true,
   showDataPoints = true,
   animationSpeed = "normal"
 }: TelemetryChartProps) {
+  // Suppress unused variable warning for future implementation
+  void chartType;
   const [visibleMetrics, setVisibleMetrics] = useState<Set<MetricType>>(new Set(['pH', 'temp', 'do']));
   const [hoveredPoint, setHoveredPoint] = useState<ChartPoint | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);

@@ -240,7 +240,7 @@ export function LicenseInfo() {
             <div style={{ color: "rgb(var(--text-primary))" }}>
               Smart Aquaculture Management System<br />
               Developed by Sejong University Capstone Team<br />
-              © 2024-2025 - Educational Project<br />
+              © 2025-2026 - Educational Project<br />
               <br />
               Built with Next.js, React, TypeScript, and Tailwind CSS<br />
               AI Assistant powered by Ollama

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
-import type { Telemetry } from "@/app/lib/types";
+import { Telemetry } from "@prisma/client";
+import { TelemetryWhereInput } from "@/app/lib/types";
 
 // Rate limiting for telemetry data (in-memory, simple implementation)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -53,18 +54,18 @@ export async function POST(request: NextRequest) {
     
     // Validate and prepare data for database
     const validRecords = telemetryData
-      .filter((record: any) => {
+      .filter((record: Telemetry) => {
         return record.pH !== undefined && 
                record.do_mg_l !== undefined && 
                record.timestamp;
       })
-      .map((record: any) => ({
+      .map((record: Telemetry) => ({
         timestamp: new Date(record.timestamp),
-        pH: parseFloat(record.pH),
-        temp_c: record.temp_c ? parseFloat(record.temp_c) : null,
-        do_mg_l: parseFloat(record.do_mg_l),
-        fish_health: record.fish_health ? parseFloat(record.fish_health) : null,
-        quality_ai: record.quality_ai ? parseFloat(record.quality_ai) : null,
+        pH: parseFloat(record?.pH?.toString() ?? '0'),
+        temp_c: record?.temp_c ? parseFloat(record?.temp_c?.toString() ?? '0') : null,
+        do_mg_l: parseFloat(record?.do_mg_l?.toString() ?? '0'),
+        fish_health: record?.fish_health ? parseFloat(record?.fish_health?.toString() ?? '0') : null,
+        quality_ai: record?.quality_ai ? parseFloat(record?.quality_ai?.toString() ?? '0') : null,
         status_ai: record.status_ai || null,
         userId: record.userId || null // Optional user association
       }));
@@ -138,10 +139,10 @@ export async function GET(request: NextRequest) {
     const to = toParam ? new Date(toParam) : now;
 
     // Build query conditions
-    const whereConditions: any = {
+    const whereConditions: TelemetryWhereInput = {
       timestamp: {
-        gte: from,
-        lte: to
+        gte: from as Date,
+        lte: to as Date
       }
     };
 

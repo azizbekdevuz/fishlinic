@@ -173,7 +173,7 @@ export function ProfileInformation() {
               Account Created
             </label>
             <p className="text-sm" style={{ color: "rgb(var(--text-muted))" }}>
-              {user?.createdAt ? formatDateTime(new Date(user.createdAt)) : "Unknown"}
+              {user?.createdAt ? formatDateTime(user.createdAt) : "Unknown"}
             </p>
             <p className="text-xs mt-1" style={{ color: "rgb(var(--text-muted))" }}>
               Account age: {formatAccountAge()}
@@ -203,7 +203,7 @@ export function ProfileInformation() {
             </div>
             {user?.verifiedAt && (
               <p className="text-xs mt-1" style={{ color: "rgb(var(--text-muted))" }}>
-                Verified on: {formatDateTime(new Date(user.verifiedAt))}
+                Verified on: {formatDateTime(user.verifiedAt)}
               </p>
             )}
             {!isVerified && (
@@ -222,7 +222,7 @@ export function ProfileInformation() {
               Last Updated
             </label>
             <p className="text-sm" style={{ color: "rgb(var(--text-muted))" }}>
-              {user?.updatedAt ? formatDateTime(new Date(user.updatedAt)) : "Never"}
+              {user?.updatedAt ? formatDateTime(user.updatedAt) : "Never"}
             </p>
           </div>
         </div>

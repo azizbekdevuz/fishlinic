@@ -6,7 +6,7 @@ let audioContext: AudioContext | null = null;
 export function initAudioContext() {
   if (!audioContext && typeof window !== 'undefined') {
     try {
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContext = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)();
     } catch (error) {
       console.warn('Audio context not supported:', error);
     }
@@ -86,7 +86,7 @@ function playBeep(context: AudioContext, frequency: number, duration: number) {
 // Check if sound is supported
 export function isSoundSupported(): boolean {
   return typeof window !== 'undefined' && 
-         !!(window.AudioContext || (window as any).webkitAudioContext);
+         !!(window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext);
 }
 
 // Request audio permission (call on user interaction)

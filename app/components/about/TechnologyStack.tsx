@@ -3,7 +3,6 @@
 import { 
   Code, 
   Database, 
-  Cloud, 
   Smartphone, 
   Brain,
   Shield,

@@ -34,7 +34,7 @@ export function SearchBar({ searchQuery, onSearchChange }: SearchBarProps) {
         
         {searchQuery && (
           <div className="mt-3 text-sm" style={{ color: "rgb(var(--text-muted))" }}>
-            Searching for: <span className="text-blue-400 font-medium">"{searchQuery}"</span>
+            Searching for: <span className="text-blue-400 font-medium">&quot;{searchQuery}&quot;</span>
           </div>
         )}
       </div>

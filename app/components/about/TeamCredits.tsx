@@ -2,9 +2,7 @@
 
 import { 
   Users, 
-  Award, 
   Heart, 
-  ExternalLink,
   Github,
   Mail,
   GraduationCap

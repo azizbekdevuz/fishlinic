@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
+import { TelemetryWhereInput } from "@/app/lib/types";
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,7 +8,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
 
     // Build query conditions
-    const whereConditions: any = {};
+    const whereConditions: TelemetryWhereInput = {};
     
     // Filter by user if provided
     if (userId) {

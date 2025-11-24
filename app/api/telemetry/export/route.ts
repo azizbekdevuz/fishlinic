@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
+import { Telemetry } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { format, includeMetadata, compress } = await request.json();
+    const { format, includeMetadata } = await request.json();
 
     // Fetch user's telemetry data
     const telemetryData = await prisma.telemetry.findMany({
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateCSV(data: any[], includeMetadata: boolean, excelFormat = false): string {
+function generateCSV(data: Telemetry[], includeMetadata: boolean, excelFormat = false): string {
   if (data.length === 0) return '';
 
   const headers = [

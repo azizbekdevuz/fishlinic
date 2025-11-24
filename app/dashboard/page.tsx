@@ -51,7 +51,6 @@ const MemoizedCameraPanel = memo(CameraPanel);
 
 function DashboardContent() {
   const { user, isVerified } = useAuth();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { settings, isLoaded, formatTemperature } = useSettings();
   
   // Use throttled telemetry updates for better performance with user filtering
@@ -126,7 +125,7 @@ function DashboardContent() {
     };
     
     return configs[metric];
-  }, [latest, metric]);
+  }, [latest, metric, formatTemperature, settings.temperatureUnit]);
 
   // Memoize filtered history data
   const { history, tableRows } = useMemo(() => {
@@ -157,7 +156,7 @@ function DashboardContent() {
       history: filteredHistory,
       tableRows: filteredRows
     };
-  }, [telemetry, range, tableRange, tableFilter]);
+  }, [telemetry, range, tableRange, tableFilter, settings.tablePagination]);
   
   // Alert monitoring
   const { activeAlerts, hasAlerts, hasCriticalAlerts } = useAlerts(latest);

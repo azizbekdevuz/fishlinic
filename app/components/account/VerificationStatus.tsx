@@ -160,7 +160,7 @@ export function VerificationStatus() {
           <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
             <h4 className="text-sm font-medium text-blue-400 mb-2">How Verification Works</h4>
             <ol className="text-xs space-y-1" style={{ color: "rgb(var(--text-muted))" }}>
-              <li>1. Click "Verify Account" to generate a QR code</li>
+              <li>1. Click &quot;Verify Account&quot; to generate a QR code</li>
               <li>2. Scan the QR code with the Python Virtual Assistant</li>
               <li>3. Your account will be verified automatically</li>
               <li>4. Gain full access to all dashboard features</li>

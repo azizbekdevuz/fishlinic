@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Delete old avatar file
-    await deleteOldAvatar(currentUser?.avatarUrl);
+    await deleteOldAvatar(currentUser?.avatarUrl || null);
 
     return NextResponse.json({
       success: true,
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const session = await getSession();
     if (!session || !session.user?.id) {

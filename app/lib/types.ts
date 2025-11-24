@@ -11,6 +11,14 @@ export type Telemetry = {
   status_ai?: Status;  // mapped status from AI (good|average|alert)
 };
 
+export type TelemetryWhereInput = {
+  userId?: string | undefined;
+  timestamp?: {
+    gte?: Date | undefined;
+    lte?: Date | undefined;
+  };
+};
+
 export type Status = "good" | "average" | "alert";
 
 export type MetricField = keyof Pick<Telemetry, "pH" | "temp_c" | "do_mg_l">;

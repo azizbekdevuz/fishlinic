@@ -26,7 +26,7 @@ export function appendTelemetry(t: Telemetry) {
   const fp = filePathForDate(ts);
   const normalized = {
     ...t,
-    temp_c: Number.isFinite(t.temp_c) ? t.temp_c : (null as any),
+    temp_c: Number.isFinite(t.temp_c) ? t.temp_c : (null as unknown as number),
   } as Telemetry & { temp_c: number | null };
   fs.appendFile(fp, JSON.stringify(normalized) + "\n", { encoding: "utf8" }, () => {});
 }

@@ -28,7 +28,7 @@ listSerialPorts().then((ports) => {
   await initFeederPersistence();
   startSerialLoop();
 })().catch((e) => {
-  console.warn("[startup] init error:", (e as any)?.message || e);
+  console.warn("[startup] init error:", (e as Error)?.message || e);
   startSerialLoop();
 });
 

@@ -131,7 +131,7 @@ export function DashboardPreferences() {
           ].map((option) => (
             <button
               key={option.value}
-              onClick={() => updateSetting("defaultTimeRange", option.value as any)}
+              onClick={() => updateSetting("defaultTimeRange", option.value as "24h" | "1w" | "1m")}
               className={`p-3 rounded-lg border transition-all duration-200 ${
                 localSettings.defaultTimeRange === option.value
                   ? "bg-blue-500/20 border-blue-500 text-blue-400"
@@ -256,7 +256,7 @@ export function DashboardPreferences() {
           ].map((option) => (
             <button
               key={option.value}
-              onClick={() => updateSetting("bufferSize", option.value as any)}
+              onClick={() => updateSetting("bufferSize", option.value as 50 | 100 | 200)}
               className={`p-3 rounded-lg border transition-all duration-200 ${
                 localSettings.bufferSize === option.value
                   ? "bg-blue-500/20 border-blue-500 text-blue-400"

@@ -8,7 +8,6 @@ import {
   Lock, 
   Eye, 
   EyeOff, 
-  Save,
   AlertTriangle,
   CheckCircle
 } from "lucide-react";
@@ -356,7 +355,7 @@ export function SecuritySettings() {
         <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
           <h4 className="text-sm font-medium text-blue-400 mb-2">Security Recommendations</h4>
           <ul className="text-xs space-y-1" style={{ color: "rgb(var(--text-muted))" }}>
-            <li>• Use a unique password that you don't use elsewhere</li>
+            <li>• Use a unique password that you don&apos;t use elsewhere</li>
             <li>• Include uppercase and lowercase letters, numbers, and symbols</li>
             <li>• Make it at least 12 characters long</li>
             <li>• Consider using a password manager</li>

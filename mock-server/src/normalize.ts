@@ -46,8 +46,8 @@ export function normalize(raw: unknown): Telemetry | null {
   const tempSafe = temp === undefined ? Number.NaN : temp;
 
   const ts =
-    typeof (raw as any)["timestamp"] === "string" && !Number.isNaN(Date.parse((raw as any)["timestamp"] as string))
-      ? ((raw as any)["timestamp"] as string)
+    typeof (raw as Record<string, unknown>)["timestamp"] === "string" && !Number.isNaN(Date.parse((raw as Record<string, unknown>)["timestamp"] as string))
+      ? ((raw as Record<string, unknown>)["timestamp"] as string)
       : new Date().toISOString();
 
   const fish = pickNumberOrNull(raw, ["fish_health", "health"] as const);

@@ -4,7 +4,7 @@ import { getSession } from "@/app/lib/auth";
 // For now, we'll return mock data since we don't have an activity log table
 // In a production app, you would create an ActivityLog model and store actual activities
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getSession();
     if (!session || !session.user?.id) {

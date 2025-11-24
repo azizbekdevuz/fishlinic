@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getSession } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 import { unlink } from "fs/promises";
@@ -25,7 +25,7 @@ async function deleteUserAvatar(avatarUrl: string | null) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const session = await getSession();
     if (!session || !session.user?.id) {

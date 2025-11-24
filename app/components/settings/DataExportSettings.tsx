@@ -6,7 +6,6 @@ import {
   Download, 
   FileText, 
   Database, 
-  Calendar, 
   Clock,
   Save,
   RotateCcw,
@@ -201,7 +200,7 @@ export function DataExportSettings() {
             return (
               <button
                 key={format.value}
-                onClick={() => updateSetting("exportFormat", format.value as any)}
+                onClick={() => updateSetting("exportFormat", format.value as "csv" | "json" | "excel")}
                 className={`w-full p-3 rounded-lg border transition-all duration-200 text-left ${
                   isSelected
                     ? "bg-blue-500/20 border-blue-500 text-blue-400"
@@ -271,7 +270,7 @@ export function DataExportSettings() {
                 ].map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => updateSetting("exportFrequency", option.value as any)}
+                    onClick={() => updateSetting("exportFrequency", option.value as "daily" | "weekly" | "monthly")}
                     className={`p-3 rounded-lg border transition-all duration-200 ${
                       exportSettings.exportFrequency === option.value
                         ? "bg-blue-500/20 border-blue-500 text-blue-400"
@@ -364,7 +363,7 @@ export function DataExportSettings() {
           ].map((option) => (
             <button
               key={option.value}
-              onClick={() => updateSetting("retentionDays", option.value as any)}
+              onClick={() => updateSetting("retentionDays", option.value as 30 | 60 | 90 | 180 | 365)}
               className={`p-3 rounded-lg border transition-all duration-200 ${
                 exportSettings.retentionDays === option.value
                   ? "bg-blue-500/20 border-blue-500 text-blue-400"
