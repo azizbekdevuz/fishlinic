@@ -71,12 +71,9 @@ model Telemetry {
 }
 
 model Chat_History {
-  id        String   @id @default(cuid())
+  id        Int    @id @default(autoincrement())
   device_id String
-  message   String   // JSON string containing chat messages
-  createdAt DateTime @default(now())
+  message   String // JSON string containing chat messages
   
-  @@index([device_id])
-  @@index([createdAt])
   @@map("chat_history")
 }
