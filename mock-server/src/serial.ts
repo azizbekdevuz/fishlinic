@@ -68,21 +68,43 @@ export async function startSerialLoop() {
   try {
     ctx.serialPort = await openSerial();
     emitSerialStatus("connected");
+    console.log("[serial] ✓ Serial port opened successfully, waiting for data...");
     if (ctx.isMockMode) stopMockDataGeneration();
+    
+    // Use ReadlineParser - handles both \n and \r\n automatically
     const parser = ctx.serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
     parser.on("data", async (line: string) => {
       try {
-        const parsed: unknown = JSON.parse(line);
+        // Log raw data for debugging
+        const trimmedLine = line.trim();
+        if (!trimmedLine) return; // Skip empty lines
+        
+        console.log("[serial] raw:", trimmedLine);
+        
+        const parsed: unknown = JSON.parse(trimmedLine);
         if (parsed && typeof parsed === "object" && (parsed as Record<string, unknown>)["ack"]) {
           ctx.io?.emit("feeder:event", parsed);
           return;
         }
         const t = normalize(parsed);
-        if (!t) return;
+        if (!t) {
+          console.warn("[serial] normalization failed for:", parsed);
+          return;
+        }
         const enriched = await enrichWithAI(t);
         pushTelemetry(enriched);
         console.log("→", enriched);
-      } catch {}
+      } catch (error) {
+        // Log errors instead of silently ignoring them
+        if (error instanceof SyntaxError) {
+          console.warn("[serial] JSON parse error:", error.message);
+          console.warn("[serial] raw line:", line.trim());
+        } else if (error instanceof Error) {
+          console.error("[serial] processing error:", error.message);
+        } else {
+          console.error("[serial] unknown error:", error);
+        }
+      }
     });
     ctx.serialPort.on("error", (e) => {
       console.error("[serial] error:", (e as Error).message);
