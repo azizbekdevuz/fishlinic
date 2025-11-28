@@ -25,23 +25,48 @@ export const ctx: {
   serialPort: null,
 };
 
-// Save telemetry to database via API
+// Save telemetry to database via API (optional - only if Next.js app is running)
 async function saveTelemetryToDatabase(t: Telemetry) {
+  // Check if database saving is enabled (default: true)
+  const dbEnabled = process.env.ENABLE_DB_SAVE !== 'false';
+  if (!dbEnabled) {
+    return; // Skip database save if disabled
+  }
+
   try {
-    const response = await fetch('http://localhost:3000/api/telemetry/save', {
+    const apiUrl = process.env.NEXTJS_API_URL || 'http://localhost:3000';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000); // 2s timeout
+    
+    const response = await fetch(`${apiUrl}/api/telemetry/save`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(t)
+      body: JSON.stringify(t),
+      signal: controller.signal as AbortSignal
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const error = await response.text();
       console.warn('[db] Failed to save telemetry to database:', error);
     }
   } catch (error) {
-    console.warn('[db] Database save error:', error);
+    // Silently fail if Next.js app is not running - this is expected in some setups
+    // Data is still saved to files and broadcast via Socket.IO
+    if (error instanceof Error && error.name === 'AbortError') {
+      // Timeout - Next.js app likely not running, skip silently
+      return;
+    }
+    // Only log non-timeout errors (connection refused, etc.) on first occurrence
+    // to avoid spam when Next.js is intentionally not running
+    const errorKey = 'db_connection_warned';
+    if (!(global as any)[errorKey]) {
+      (global as any)[errorKey] = true;
+      console.warn('[db] Database save unavailable (Next.js app not running). Data saved to files only.');
+    }
   }
 }
 
