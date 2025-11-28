@@ -9,7 +9,14 @@ import { initDb } from "./db";
 
 const app = createApp();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: ALLOWED_ORIGINS, methods: ["GET", "POST"] }, transports: ["websocket"] });
+const io = new Server(server, { 
+  cors: { 
+    origin: ALLOWED_ORIGINS, 
+    methods: ["GET", "POST"] 
+  }, 
+  // Allow both transports for better compatibility
+  transports: ["websocket", "polling"]
+});
 
 ctx.app = app;
 ctx.server = server;
@@ -33,8 +40,21 @@ listSerialPorts().then((ports) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("client connected", socket.id);
-  socket.on("disconnect", () => console.log("client disconnected", socket.id));
+  console.log("[socket] Client connected:", socket.id);
+  
+  // Send current status immediately
+  socket.emit("serial:status", { 
+    status: ctx.serialPort?.isOpen ? "connected" : "disconnected" 
+  });
+  
+  // Send latest telemetry if available
+  if (ctx.latestTelemetry) {
+    socket.emit("telemetry:update", ctx.latestTelemetry);
+  }
+  
+  socket.on("disconnect", () => {
+    console.log("[socket] Client disconnected:", socket.id);
+  });
 });
 
 server.listen(PORT, () => console.log("Serial Socket.IO bridge on", PORT));

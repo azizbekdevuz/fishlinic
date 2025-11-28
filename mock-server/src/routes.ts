@@ -82,7 +82,30 @@ export function createApp() {
     res.json({ message: "Mock data generation stopped", isMockMode: ctx.isMockMode });
   });
   app.get("/mock/status", (_req, res) => {
-    res.json({ isMockMode: ctx.isMockMode, hasSerialConnection: ctx.serialPort !== null, latestTelemetry: ctx.latestTelemetry ? "available" : "none" });
+    res.json({ 
+      isMockMode: ctx.isMockMode, 
+      hasSerialConnection: ctx.serialPort?.isOpen ?? false, 
+      latestTelemetry: ctx.latestTelemetry ? "available" : "none" 
+    });
+  });
+
+  // System status endpoint - comprehensive status for dashboard
+  app.get("/status", (_req, res) => {
+    res.json({
+      bridge: "online",
+      serial: {
+        connected: ctx.serialPort?.isOpen ?? false,
+        mockMode: ctx.isMockMode
+      },
+      data: {
+        hasData: ctx.latestTelemetry !== null,
+        bufferSize: ctx.telemetryBuffer.length,
+        lastUpdate: ctx.latestTelemetry?.timestamp ?? null
+      },
+      sockets: {
+        connections: ctx.io?.engine?.clientsCount ?? 0
+      }
+    });
   });
 
   return app;

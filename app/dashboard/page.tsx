@@ -53,11 +53,21 @@ function DashboardContent() {
   const { user, isVerified } = useAuth();
   const { settings, isLoaded, formatTemperature } = useSettings();
   
-  // Use throttled telemetry updates for better performance with user filtering
-  const { telemetry, latest, socketConnected, serialConnected, refresh } = useTelemetry({
+  // Use throttled telemetry updates for better performance
+  // updateThrottleMs: Controls how often UI updates (user's refresh interval setting)
+  // Bridge always sends data every second, but UI only updates based on this setting
+  const { 
+    telemetry, 
+    latest, 
+    socketConnected, 
+    serialConnected,
+    bridgeAvailable,
+    isMockMode,
+    refresh 
+  } = useTelemetry({
     updateThrottleMs: settings.refreshInterval * 1000 || 2000,
     bufferSize: settings.bufferSize || 100,
-    userId: user?.id // Filter by user ID
+    userId: user?.id
   });
   
   const [metric, setMetric] = useState<MetricKey>("overall");
@@ -170,13 +180,23 @@ function DashboardContent() {
 
   // Memoize connection status
   const connectionInfo = useMemo(() => {
-    const connectionStatus = socketConnected
-      ? (serialConnected === false ? "mock" : "connected")
-      : "disconnected";
+    // Priority: socket connected + serial connected = live
+    //           socket connected + no serial = mock
+    //           no socket = disconnected (bridge unavailable)
+    let connectionStatus: "connected" | "mock" | "disconnected";
+    
+    if (!socketConnected || bridgeAvailable === false) {
+      connectionStatus = "disconnected";
+    } else if (serialConnected === true && !isMockMode) {
+      connectionStatus = "connected";
+    } else {
+      connectionStatus = "mock";
+    }
+    
     const connectionColor = connectionStatus === "connected" ? "status-good" : 
                            connectionStatus === "mock" ? "status-warning" : "status-danger";
     return { connectionStatus, connectionColor };
-  }, [serialConnected, socketConnected]);
+  }, [socketConnected, serialConnected, bridgeAvailable, isMockMode]);
 
   // Memoized callbacks to prevent child re-renders
   const handleMetricChange = useCallback((newMetric: MetricKey) => {
@@ -190,42 +210,43 @@ function DashboardContent() {
   const { connectionStatus, connectionColor } = connectionInfo;
 
   // Loading states with memoized components
-  if (serialConnected === false && telemetry.length === 0) {
+  // Show fallback only when bridge is truly unavailable (not just in mock mode)
+  if (bridgeAvailable === false && telemetry.length === 0) {
     return (
       <div className="bg-gradient-main min-h-screen">
         <div className="container mx-auto px-4 py-6 max-w-7xl">
           <div className="card-glass p-8 text-center animate-fade-in">
             <WifiOff className="w-16 h-16 mx-auto mb-6 text-red-400" />
             <h2 className="text-2xl font-bold mb-4 text-gradient">
-              System Disconnected
+              Bridge Server Unavailable
             </h2>
             <p className="text-lg mb-6" style={{ color: "rgb(var(--text-secondary))" }}>
-              Hardware connection lost. Reconnecting automatically...
+              Cannot connect to the data bridge. Please start the bridge server.
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
               <div className="card p-4">
                 <h3 className="font-semibold mb-2" style={{ color: "rgb(var(--text-primary))" }}>
-                  Check USB Connection
+                  Start Bridge Server
                 </h3>
                 <p className="text-sm" style={{ color: "rgb(var(--text-muted))" }}>
-                  Ensure the USB cable is firmly connected and not power-only
+                  Run <code className="bg-white/10 px-1 rounded">npm run dev:bridge</code> in the mock-server folder
                 </p>
               </div>
               <div className="card p-4">
                 <h3 className="font-semibold mb-2" style={{ color: "rgb(var(--text-primary))" }}>
-                  Verify Baud Rate
+                  Check Port 4000
                 </h3>
                 <p className="text-sm" style={{ color: "rgb(var(--text-muted))" }}>
-                  Check that baud rate is 9600 on the Arduino sketch
+                  Ensure the bridge is running on port 4000 and not blocked by firewall
                 </p>
               </div>
               <div className="card p-4">
                 <h3 className="font-semibold mb-2" style={{ color: "rgb(var(--text-primary))" }}>
-                  Restart Bridge
+                  Connect Arduino
                 </h3>
                 <p className="text-sm" style={{ color: "rgb(var(--text-muted))" }}>
-                  Reopen the mock bridge app and select the correct COM port
+                  Close Arduino Serial Monitor before starting the bridge
                 </p>
               </div>
             </div>

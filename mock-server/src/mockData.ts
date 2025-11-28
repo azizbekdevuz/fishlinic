@@ -33,14 +33,24 @@ let mockDataInterval: NodeJS.Timeout | null = null;
 
 export function startMockDataGeneration() {
   if (mockDataInterval) return;
-  console.log("[mock] Starting mock data generation for testing without hardware");
+  console.log("[mock] Starting mock data generation (1s interval, matching hardware)");
   ctx.isMockMode = true;
+  
+  // Generate first data point immediately
+  (async () => {
+    const mockTelemetry = generateMockTelemetry();
+    const enriched = await enrichWithAI(mockTelemetry);
+    pushTelemetry(enriched);
+    console.log("[mock] →", enriched);
+  })();
+  
+  // Then every 1 second (matching Arduino's 1-second output)
   mockDataInterval = setInterval(async () => {
     const mockTelemetry = generateMockTelemetry();
     const enriched = await enrichWithAI(mockTelemetry);
     pushTelemetry(enriched);
     console.log("[mock] →", enriched);
-  }, 3000);
+  }, 1000);
 }
 
 export function stopMockDataGeneration() {
