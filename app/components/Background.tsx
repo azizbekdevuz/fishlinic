@@ -1,6 +1,6 @@
 "use client";
 
-export function Background() {
+export function Background() { // Background component for the app
   return (
     <div
       aria-hidden
