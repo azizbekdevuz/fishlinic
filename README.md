@@ -261,6 +261,11 @@ This project is developed for educational purposes as part of Sejong University 
 - **Institution**: Sejong University
 - **Course**: Capstone Design Course 2025
 
+**Other team members**:
+- **Leader**: Tran Dai Viet Hung
+- **Hardware Engineer**: Azizjon Kamoliddinov
+- **AI Software Development Team**: Nomungerel Mijiddor & Phyo Thiri Khaing
+
 ## Links
 
 - [GitHub Repository](https://github.com/azizbekdevuz/fishlinic)
