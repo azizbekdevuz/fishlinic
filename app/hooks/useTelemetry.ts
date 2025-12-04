@@ -12,6 +12,12 @@ export type UseTelemetryOptions = {
   userId?: string;
 };
 
+// Hardware connection status for both Arduinos
+export type HardwareConnectionStatus = {
+  main: boolean;      // pH, DO, RTC Arduino
+  secondary: boolean; // Temperature, Servo Arduino
+};
+
 export function useTelemetry(options?: UseTelemetryOptions) {
   const bufferSize = options?.bufferSize ?? 200;
   const updateThrottleMs = options?.updateThrottleMs ?? 2000;
@@ -21,6 +27,7 @@ export function useTelemetry(options?: UseTelemetryOptions) {
   const [serialConnected, setSerialConnected] = useState<boolean | null>(null);
   const [bridgeAvailable, setBridgeAvailable] = useState<boolean | null>(null);
   const [isMockMode, setIsMockMode] = useState(false);
+  const [hardwareStatus, setHardwareStatus] = useState<HardwareConnectionStatus>({ main: false, secondary: false });
   
   const socketRef = useRef<Socket | null>(null);
   const lastUpdateRef = useRef<number>(0);
@@ -102,11 +109,17 @@ export function useTelemetry(options?: UseTelemetryOptions) {
       setBridgeAvailable(true);
     });
     
-    // Serial status (hardware connection)
-    socket.on("serial:status", (s: { status: "connected" | "disconnected" }) => {
-      console.log("[telemetry] Serial status:", s.status);
-      setSerialConnected(s.status === "connected");
-      setIsMockMode(s.status !== "connected");
+    // Serial status (hardware connection) - supports both old and new format
+    socket.on("serial:status", (s: { status?: "connected" | "disconnected"; main?: boolean; secondary?: boolean }) => {
+      const mainConnected = s.main ?? false;
+      const secondaryConnected = s.secondary ?? false;
+      const anyConnected = mainConnected || secondaryConnected || s.status === "connected";
+      
+      console.log("[telemetry] Hardware status:", { main: mainConnected, secondary: secondaryConnected, anyConnected });
+      
+      setHardwareStatus({ main: mainConnected, secondary: secondaryConnected });
+      setSerialConnected(anyConnected);
+      setIsMockMode(!anyConnected);
     });
     
     // Telemetry data events
@@ -220,6 +233,7 @@ export function useTelemetry(options?: UseTelemetryOptions) {
     serialConnected,
     bridgeAvailable,
     isMockMode,
+    hardwareStatus,
     refresh
   } as const;
 }

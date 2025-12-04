@@ -60,9 +60,9 @@ function DashboardContent() {
     telemetry, 
     latest, 
     socketConnected, 
-    serialConnected,
     bridgeAvailable,
     isMockMode,
+    hardwareStatus: hwStatus,
     refresh 
   } = useTelemetry({
     updateThrottleMs: settings.refreshInterval * 1000 || 2000,
@@ -178,25 +178,40 @@ function DashboardContent() {
     setTimeout(() => setIsRefreshing(false), 500);
   }, [refresh]);
 
-  // Memoize connection status
+  // Memoize connection status with granular hardware info
   const connectionInfo = useMemo(() => {
     // Priority: socket connected + serial connected = live
     //           socket connected + no serial = mock
     //           no socket = disconnected (bridge unavailable)
-    let connectionStatus: "connected" | "mock" | "disconnected";
+    let connectionStatus: "connected" | "partial" | "mock" | "disconnected";
+    let statusDetail = "";
     
     if (!socketConnected || bridgeAvailable === false) {
       connectionStatus = "disconnected";
-    } else if (serialConnected === true && !isMockMode) {
+      statusDetail = "Bridge Offline";
+    } else if (hwStatus.main && hwStatus.secondary) {
       connectionStatus = "connected";
-    } else {
+      statusDetail = "All Systems";
+    } else if (hwStatus.main || hwStatus.secondary) {
+      connectionStatus = "partial";
+      if (hwStatus.main && !hwStatus.secondary) {
+        statusDetail = "pH/DO Only";
+      } else {
+        statusDetail = "Temp Only";
+      }
+    } else if (isMockMode) {
       connectionStatus = "mock";
+      statusDetail = "Simulated";
+    } else {
+      connectionStatus = "disconnected";
+      statusDetail = "No Hardware";
     }
     
     const connectionColor = connectionStatus === "connected" ? "status-good" : 
-                           connectionStatus === "mock" ? "status-warning" : "status-danger";
-    return { connectionStatus, connectionColor };
-  }, [socketConnected, serialConnected, bridgeAvailable, isMockMode]);
+                           connectionStatus === "partial" ? "status-warning" :
+                           connectionStatus === "mock" ? "status-neutral" : "status-danger";
+    return { connectionStatus, connectionColor, statusDetail, hardwareStatus: hwStatus };
+  }, [socketConnected, bridgeAvailable, isMockMode, hwStatus]);
 
   // Memoized callbacks to prevent child re-renders
   const handleMetricChange = useCallback((newMetric: MetricKey) => {
@@ -207,7 +222,7 @@ function DashboardContent() {
     setRange(e.target.value as "24h" | "1w" | "1m");
   }, []);
 
-  const { connectionStatus, connectionColor } = connectionInfo;
+  const { connectionStatus, connectionColor, statusDetail, hardwareStatus } = connectionInfo;
 
   // Loading states with memoized components
   // Show fallback only when bridge is truly unavailable (not just in mock mode)
@@ -313,15 +328,18 @@ function DashboardContent() {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              <div className={`badge ${connectionColor}`}>
+              <div className={`badge ${connectionColor}`} title={statusDetail}>
                 {connectionStatus === "connected" ? (
                   <Wifi className="w-3 h-3" />
+                ) : connectionStatus === "partial" ? (
+                  <AlertTriangle className="w-3 h-3" />
                 ) : connectionStatus === "mock" ? (
                   <Activity className="w-3 h-3" />
                 ) : (
                   <WifiOff className="w-3 h-3" />
                 )}
                 {connectionStatus === "connected" ? "Live Data" : 
+                 connectionStatus === "partial" ? `Partial (${statusDetail})` :
                  connectionStatus === "mock" ? "Mock Data" : "Disconnected"}
               </div>
               
@@ -471,24 +489,29 @@ function DashboardContent() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm" style={{ color: "rgb(var(--text-secondary))" }}>
-                      Data Connection
+                      Main Arduino (pH/DO)
                     </span>
-                    <div className={`badge ${connectionColor} text-xs`}>
-                      {connectionStatus === "connected" ? "Stable" : 
-                       connectionStatus === "mock" ? "Simulated" : "Lost"}
+                    <div className={`badge ${hardwareStatus.main ? "status-good" : "status-danger"} text-xs`}>
+                      {hardwareStatus.main ? "Connected" : "Offline"}
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm" style={{ color: "rgb(var(--text-secondary))" }}>
-                      AI Processing
+                      Secondary (Temp/Feeder)
                     </span>
-                    <div className="badge status-good text-xs">Active</div>
+                    <div className={`badge ${hardwareStatus.secondary ? "status-good" : "status-danger"} text-xs`}>
+                      {hardwareStatus.secondary ? "Connected" : "Offline"}
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm" style={{ color: "rgb(var(--text-secondary))" }}>
-                      Data Quality
+                      Data Mode
                     </span>
-                    <div className="badge status-good text-xs">Excellent</div>
+                    <div className={`badge ${connectionColor} text-xs`}>
+                      {connectionStatus === "connected" ? "Live" : 
+                       connectionStatus === "partial" ? "Partial" :
+                       connectionStatus === "mock" ? "Simulated" : "Offline"}
+                    </div>
                   </div>
                 </div>
               </div>
