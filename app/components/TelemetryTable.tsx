@@ -122,7 +122,7 @@ export function TelemetryTable({ rows }: TelemetryTableProps) {
                 })()}
                 <div className="flex flex-col">
                   <span className={`font-bold ${getStatusColor(row.pH, 'ph')}`}>
-                    {row.pH.toFixed(2)}
+                    {row.pH?.toFixed(2) ?? "--"}
                   </span>
                   <span className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
                     pH units
@@ -138,10 +138,10 @@ export function TelemetryTable({ rows }: TelemetryTableProps) {
                 })()}
                 <div className="flex flex-col">
                   <span className={`font-bold ${getStatusColor(row.temp_c, 'temp')}`}>
-                    {row.temp_c.toFixed(1)}°C
+                    {row.temp_c?.toFixed(1) ?? "--"}°C
                   </span>
                   <span className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
-                    {((row.temp_c * 9/5) + 32).toFixed(1)}°F
+                    {row.temp_c != null ? ((row.temp_c * 9/5) + 32).toFixed(1) : "--"}°F
                   </span>
                 </div>
               </div>
@@ -154,7 +154,7 @@ export function TelemetryTable({ rows }: TelemetryTableProps) {
                 })()}
                 <div className="flex flex-col">
                   <span className={`font-bold ${getStatusColor(row.do_mg_l, 'do')}`}>
-                    {row.do_mg_l.toFixed(2)}
+                    {row.do_mg_l?.toFixed(2) ?? "--"}
                   </span>
                   <span className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
                     mg/L
@@ -268,7 +268,7 @@ export function TelemetryTable({ rows }: TelemetryTableProps) {
                 </div>
                 <div>
                   <div className={`font-bold text-sm ${getStatusColor(row.pH, 'ph')}`}>
-                    {row.pH.toFixed(2)}
+                    {row.pH?.toFixed(2) ?? "--"}
                   </div>
                   <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
                     pH
@@ -287,10 +287,10 @@ export function TelemetryTable({ rows }: TelemetryTableProps) {
                 </div>
                 <div>
                   <div className={`font-bold text-sm ${getStatusColor(row.temp_c, 'temp')}`}>
-                    {row.temp_c.toFixed(1)}°C
+                    {row.temp_c?.toFixed(1) ?? "--"}°C
                   </div>
                   <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
-                    {((row.temp_c * 9/5) + 32).toFixed(1)}°F
+                    {row.temp_c != null ? ((row.temp_c * 9/5) + 32).toFixed(1) : "--"}°F
                   </div>
                 </div>
               </div>
@@ -306,7 +306,7 @@ export function TelemetryTable({ rows }: TelemetryTableProps) {
                 </div>
                 <div>
                   <div className={`font-bold text-sm ${getStatusColor(row.do_mg_l, 'do')}`}>
-                    {row.do_mg_l.toFixed(2)}
+                    {row.do_mg_l?.toFixed(2) ?? "--"}
                   </div>
                   <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
                     mg/L O₂

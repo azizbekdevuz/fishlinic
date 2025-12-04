@@ -8,30 +8,35 @@ type QuickStatsCardProps = {
 };
 
 export function QuickStatsCard({ latest }: QuickStatsCardProps) {
+  // Safe accessors for potentially null values
+  const pH = latest.pH ?? 0;
+  const temp_c = latest.temp_c ?? 0;
+  const do_mg_l = latest.do_mg_l ?? 0;
+  
   const stats = [
     {
       label: "pH Level",
-      value: latest.pH.toFixed(2),
+      value: latest.pH != null ? pH.toFixed(2) : "--",
       unit: "",
       icon: TestTube,
-      status: latest.pH >= 6.5 && latest.pH <= 8.0 ? "good" : 
-              latest.pH >= 6.0 && latest.pH <= 8.5 ? "average" : "alert"
+      status: pH >= 6.5 && pH <= 8.0 ? "good" : 
+              pH >= 6.0 && pH <= 8.5 ? "average" : "alert"
     },
     {
       label: "Temperature",
-      value: latest.temp_c.toFixed(1),
+      value: latest.temp_c != null ? temp_c.toFixed(1) : "--",
       unit: "°C",
       icon: Thermometer,
-      status: latest.temp_c >= 20 && latest.temp_c <= 30 ? "good" : 
-              latest.temp_c >= 18 && latest.temp_c <= 32 ? "average" : "alert"
+      status: temp_c >= 20 && temp_c <= 30 ? "good" : 
+              temp_c >= 18 && temp_c <= 32 ? "average" : "alert"
     },
     {
       label: "Dissolved O₂",
-      value: latest.do_mg_l.toFixed(2),
+      value: latest.do_mg_l != null ? do_mg_l.toFixed(2) : "--",
       unit: "mg/L",
       icon: Wind,
-      status: latest.do_mg_l >= 5.0 ? "good" : 
-              latest.do_mg_l >= 3.5 ? "average" : "alert"
+      status: do_mg_l >= 5.0 ? "good" : 
+              do_mg_l >= 3.5 ? "average" : "alert"
     },
     ...(latest.fish_health ? [{
       label: "Fish Health",

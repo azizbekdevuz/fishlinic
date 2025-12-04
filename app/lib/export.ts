@@ -9,9 +9,9 @@ export function exportToCSV(data: Telemetry[], filename = "telemetry-data"): voi
   const headers = ["Timestamp", "pH", "Temperature (°C)", "Dissolved Oxygen (mg/L)", "Fish Health (%)", "AI Quality Score", "AI Status"];
   const rows = data.map(item => [
     item.timestamp,
-    item.pH.toFixed(2),
-    item.temp_c.toFixed(1),
-    item.do_mg_l.toFixed(2),
+    item.pH?.toFixed(2) ?? "",
+    item.temp_c?.toFixed(1) ?? "",
+    item.do_mg_l?.toFixed(2) ?? "",
     item.fish_health?.toFixed(0) ?? "",
     item.quality_ai?.toFixed(1) ?? "",
     item.status_ai ?? ""
