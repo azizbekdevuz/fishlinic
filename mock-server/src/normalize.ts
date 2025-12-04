@@ -36,14 +36,17 @@ function clamp(n: number, lo: number, hi: number) {
 export function normalize(raw: unknown): Telemetry | null {
   if (!isRecord(raw)) return null;
 
-  const pH = pickNumber(raw, ["pH", "ph", "PH"] as const);
-  const DOx = pickNumber(raw, ["do_mg_l", "do", "DO", "dox"] as const);
+  const pH = pickNumberOrNull(raw, ["pH", "ph", "PH"] as const);
+  const DOx = pickNumberOrNull(raw, ["do_mg_l", "do", "DO", "dox"] as const);
   const temp = pickNumberOrNull(raw, ["temp_c", "temp", "temperature"] as const);
-  if (pH === undefined || DOx === undefined) return null;
+  
+  // Allow partial data - need at least ONE sensor reading
+  if (pH === undefined && DOx === undefined && temp === undefined) return null;
 
-  const pHSafe = clamp(pH, 0, 14);
-  const DOsafe = clamp(DOx, 0, 30);
-  const tempSafe = temp === undefined ? Number.NaN : temp;
+  // Safe values (clamp if present, NaN if not)
+  const pHSafe = pH !== undefined ? clamp(pH, 0, 14) : Number.NaN;
+  const DOsafe = DOx !== undefined ? clamp(DOx, 0, 30) : Number.NaN;
+  const tempSafe = temp !== undefined ? temp : Number.NaN;
 
   const ts =
     typeof (raw as Record<string, unknown>)["timestamp"] === "string" && !Number.isNaN(Date.parse((raw as Record<string, unknown>)["timestamp"] as string))

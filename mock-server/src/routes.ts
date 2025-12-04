@@ -94,7 +94,9 @@ export function createApp() {
     res.json({
       bridge: "online",
       serial: {
-        connected: ctx.serialPort?.isOpen ?? false,
+        connected: ctx.mainConnected || ctx.secondaryConnected,
+        main: ctx.mainConnected,
+        secondary: ctx.secondaryConnected,
         mockMode: ctx.isMockMode
       },
       data: {

@@ -1,10 +1,11 @@
 import { SerialPort } from "serialport";
 import { ReadlineParser } from "@serialport/parser-readline";
-import { ctx, pushTelemetry } from "./context";
-import { SERIAL_BAUD, SERIAL_PATH } from "./config";
+import { ctx, pushTelemetry, PartialTelemetry } from "./context";
+import { SERIAL_BAUD, SERIAL_PATH_MAIN, SERIAL_PATH_SECONDARY } from "./config";
 import { normalize } from "./normalize";
 import { enrichWithAI } from "./ai";
 import { startMockDataGeneration, stopMockDataGeneration } from "./mockData";
+import { Telemetry } from "./types";
 
 export async function listSerialPorts() {
   try {
@@ -24,197 +25,339 @@ function normalizeWindowsComPath(pathIn: string): string {
   return n >= 10 ? `\\\\.\\COM${n}` : pathIn;
 }
 
-async function findSerialPort(): Promise<string> {
-  if (SERIAL_PATH !== "auto") {
-    return normalizeWindowsComPath(SERIAL_PATH);
-  }
-  
+async function findSerialPorts(): Promise<{ main: string | null; secondary: string | null }> {
   const ports = await listSerialPorts();
   console.log("[serial] available ports:");
   for (const p of ports) {
     console.log("  -", p.path, p.manufacturer || "", p.vendorId || "");
   }
-  
-  // Find Arduino-like port
-  const arduino = ports.find((p) =>
+
+  let mainPath: string | null = null;
+  let secondaryPath: string | null = null;
+
+  // If explicit paths are set, use them
+  if (SERIAL_PATH_MAIN !== "auto") {
+    mainPath = normalizeWindowsComPath(SERIAL_PATH_MAIN);
+  }
+  if (SERIAL_PATH_SECONDARY !== "auto") {
+    secondaryPath = normalizeWindowsComPath(SERIAL_PATH_SECONDARY);
+  }
+
+  // Auto-detect Arduino ports
+  const arduinoPorts = ports.filter((p) =>
     /arduino|wch|ch340|silabs|ftdi|usb-serial|uno|mega|nano/i.test(
       [p.manufacturer, p.vendorId, p.productId, p.path, p.pnpId].filter(Boolean).join(" ")
     )
-  ) || ports[0];
-  
-  if (!arduino) {
-    throw new Error("No serial device found. Set SERIAL_PATH=COM3 in .env");
+  );
+
+  // If main not set, use first Arduino port
+  if (!mainPath && arduinoPorts.length > 0) {
+    mainPath = normalizeWindowsComPath(arduinoPorts[0].path);
   }
-  
-  return normalizeWindowsComPath(arduino.path);
+
+  // If secondary not set, use second Arduino port (different from main)
+  if (!secondaryPath && arduinoPorts.length > 1) {
+    const secondPort = arduinoPorts.find(p => normalizeWindowsComPath(p.path) !== mainPath);
+    if (secondPort) {
+      secondaryPath = normalizeWindowsComPath(secondPort.path);
+    }
+  }
+
+  return { main: mainPath, secondary: secondaryPath };
 }
 
-let serialRetryTimeout: NodeJS.Timeout | null = null;
-
-function emitSerialStatus(status: "connected" | "disconnected") {
-  ctx.io?.emit("serial:status", { status });
-}
-
-export function writeSerialJson(obj: unknown) {
-  if (!ctx.serialPort?.isOpen) {
-    throw new Error("Serial port not connected");
-  }
-  ctx.serialPort.write(JSON.stringify(obj) + "\n", (err) => {
-    if (err) console.error("[serial] write error:", err.message);
+function emitSerialStatus() {
+  const mainConnected = ctx.serialPortMain?.isOpen ?? false;
+  const secondaryConnected = ctx.serialPortSecondary?.isOpen ?? false;
+  
+  ctx.io?.emit("serial:status", { 
+    status: mainConnected || secondaryConnected ? "connected" : "disconnected",
+    main: mainConnected,
+    secondary: secondaryConnected
   });
 }
 
-export async function startSerialLoop() {
-  // Clear any previous retry
-  if (serialRetryTimeout) {
-    clearTimeout(serialRetryTimeout);
-    serialRetryTimeout = null;
+// Write command to secondary Arduino (for feeder)
+export function writeToSecondary(obj: unknown) {
+  if (!ctx.serialPortSecondary?.isOpen) {
+    throw new Error("Secondary Arduino not connected");
+  }
+  const data = JSON.stringify(obj) + "\n";
+  console.log("[serial:secondary] sending:", data.trim());
+  ctx.serialPortSecondary.write(data, (err) => {
+    if (err) console.error("[serial:secondary] write error:", err.message);
+  });
+}
+
+// Legacy compatibility
+export function writeSerialJson(obj: unknown) {
+  return writeToSecondary(obj);
+}
+
+// Merge data from both Arduinos and emit telemetry
+let lastMergeTime = 0;
+const MERGE_INTERVAL_MS = 1000; // Emit merged data every 1 second
+
+async function emitMergedTelemetry() {
+  const now = Date.now();
+  if (now - lastMergeTime < MERGE_INTERVAL_MS) return;
+  lastMergeTime = now;
+
+  const { pH, do_mg_l, rtc } = ctx.latestMainData;
+  const { temp_c } = ctx.latestSecondaryData;
+
+  // Allow partial data - emit if we have ANY sensor data
+  // This allows the system to work with only one Arduino connected
+  const hasMainData = pH !== undefined || do_mg_l !== undefined;
+  const hasSecondaryData = temp_c !== undefined;
+  
+  if (!hasMainData && !hasSecondaryData) return;
+
+  const rawTelemetry = {
+    pH: pH ?? null,
+    do_mg_l: do_mg_l ?? null,
+    temp_c: temp_c ?? null,
+    rtc,
+    timestamp: new Date().toISOString()
+  };
+
+  const telemetry = normalize(rawTelemetry);
+  if (!telemetry) return;
+
+  // Enrich with AI (only if we have pH and DO for meaningful prediction)
+  let enriched = telemetry;
+  if (pH !== undefined && do_mg_l !== undefined) {
+    enriched = await enrichWithAI(telemetry);
   }
   
+  // Push to clients and storage
+  pushTelemetry(enriched);
+  console.log("→", enriched);
+}
+
+async function openPort(
+  portPath: string, 
+  portName: "main" | "secondary",
+  onData: (line: string) => void
+): Promise<SerialPort | null> {
   try {
-    const portPath = await findSerialPort();
-    console.log(`[serial] Opening ${portPath} @ ${SERIAL_BAUD} baud...`);
+    console.log(`[serial:${portName}] Opening ${portPath} @ ${SERIAL_BAUD} baud...`);
     
-    // Create and open serial port
     const port = new SerialPort({
       path: portPath,
       baudRate: SERIAL_BAUD,
-      autoOpen: false  // We'll open manually for better control
+      autoOpen: false
     });
-    
-    ctx.serialPort = port;
-    
-    // Open with promise
+
     await new Promise<void>((resolve, reject) => {
       port.open((err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
+        if (err) reject(err);
+        else resolve();
       });
     });
+
+    console.log(`[serial:${portName}] ✓ Port opened successfully`);
     
-    console.log("[serial] ✓ Port opened successfully");
-    
-    // Wait for Arduino to reset (it resets when serial connection opens)
-    // This is critical - Arduino needs ~2 seconds after reset before sending data
-    console.log("[serial] Waiting 2.5s for Arduino to initialize after reset...");
+    // Wait for Arduino reset
+    console.log(`[serial:${portName}] Waiting 2.5s for Arduino to initialize...`);
     await new Promise(resolve => setTimeout(resolve, 2500));
     
-    // Flush any garbage data from the buffer
+    // Flush garbage data
     await new Promise<void>((resolve) => {
       port.flush((err) => {
-        if (err) console.warn("[serial] Flush warning:", err.message);
+        if (err) console.warn(`[serial:${portName}] Flush warning:`, err.message);
         resolve();
       });
     });
-    
-    console.log("[serial] ✓ Ready to receive data");
-    emitSerialStatus("connected");
-    
-    // Stop mock data when real hardware connects
-    if (ctx.isMockMode) {
-      stopMockDataGeneration();
-    }
-    
+
+    console.log(`[serial:${portName}] ✓ Ready to receive data`);
+
     // Set up line parser
     const parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
-    
     let dataReceived = false;
-    
-    parser.on("data", async (line: string) => {
+
+    parser.on("data", (line: string) => {
       const trimmed = line.trim();
       if (!trimmed) return;
       
       if (!dataReceived) {
         dataReceived = true;
-        console.log("[serial] ✓ First data received!");
+        console.log(`[serial:${portName}] ✓ First data received!`);
       }
       
-      try {
-        // Handle feeder acknowledgment
-        const parsed = JSON.parse(trimmed);
-        if (parsed?.ack) {
-          ctx.io?.emit("feeder:event", parsed);
-          return;
-        }
-        
-        // Normalize telemetry data
-        const telemetry = normalize(parsed);
-        if (!telemetry) {
-          console.warn("[serial] Invalid data format:", trimmed);
-          return;
-        }
-        
-        // Enrich with AI (optional, fails gracefully)
-        const enriched = await enrichWithAI(telemetry);
-        
-        // Push to clients and storage
-        pushTelemetry(enriched);
-        console.log("→", enriched);
-        
-      } catch (error) {
-        if (error instanceof SyntaxError) {
-          // Probably startup garbage or incomplete line
-          console.warn("[serial] JSON parse error:", trimmed.substring(0, 50));
-        } else {
-          console.error("[serial] Processing error:", error);
-        }
-      }
+      onData(trimmed);
     });
-    
-    // Handle errors
+
     port.on("error", (err) => {
-      console.error("[serial] Error:", err.message);
-      handleDisconnect();
+      console.error(`[serial:${portName}] Error:`, err.message);
     });
-    
+
     port.on("close", () => {
-      console.log("[serial] Port closed");
-      handleDisconnect();
+      console.log(`[serial:${portName}] Port closed`);
+      if (portName === "main") {
+        ctx.serialPortMain = null;
+        ctx.mainConnected = false;
+      } else {
+        ctx.serialPortSecondary = null;
+        ctx.secondaryConnected = false;
+      }
+      emitSerialStatus();
+      checkAndStartMock();
     });
-    
+
     // Warn if no data after timeout
     setTimeout(() => {
       if (!dataReceived) {
-        console.warn("[serial] ⚠️ No data received after 15 seconds!");
-        console.warn("[serial] Check: Arduino is sending, baud rate matches, correct COM port");
+        console.warn(`[serial:${portName}] ⚠️ No data received after 15 seconds!`);
       }
     }, 15000);
-    
+
+    return port;
+
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error("[serial] Failed to open:", msg);
+    console.error(`[serial:${portName}] Failed to open:`, msg);
     
     if (msg.includes("Access denied") || msg.includes("Permission denied")) {
-      console.error("[serial] ❌ Port is locked! Close Arduino Serial Monitor and try again.");
+      console.error(`[serial:${portName}] ❌ Port is locked! Close Arduino Serial Monitor.`);
     }
     
-    handleDisconnect();
+    return null;
   }
 }
 
-function handleDisconnect() {
-  ctx.serialPort = null;
-  emitSerialStatus("disconnected");
-  
-  // Start mock data if not already running
-  if (!ctx.isMockMode) {
-    console.log("[serial] Starting mock data generation...");
+function handleMainData(line: string) {
+  try {
+    // Skip non-JSON lines
+    if (!line.startsWith("{")) return;
+    
+    const parsed = JSON.parse(line);
+    
+    // Extract pH and DO (ignore temp_c from main - we get it from secondary)
+    if (typeof parsed.pH === "number") {
+      ctx.latestMainData.pH = parsed.pH;
+    }
+    if (typeof parsed.do_mg_l === "number") {
+      ctx.latestMainData.do_mg_l = parsed.do_mg_l;
+    }
+    if (typeof parsed.rtc === "string") {
+      ctx.latestMainData.rtc = parsed.rtc;
+    }
+    
+    // Trigger merged telemetry emission
+    emitMergedTelemetry();
+    
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      console.warn("[serial:main] JSON parse error:", line.substring(0, 50));
+    }
+  }
+}
+
+function handleSecondaryData(line: string) {
+  try {
+    // Skip non-JSON lines
+    if (!line.startsWith("{")) return;
+    
+    const parsed = JSON.parse(line);
+    
+    // Handle feeder acknowledgments
+    if (parsed.ack) {
+      console.log("[serial:secondary] Feeder ack:", parsed.ack);
+      ctx.io?.emit("feeder:event", { type: "ack", ...parsed });
+      return;
+    }
+    
+    // Handle errors
+    if (parsed.error) {
+      console.warn("[serial:secondary] Error:", parsed.error);
+      ctx.io?.emit("feeder:event", { type: "error", error: parsed.error });
+      return;
+    }
+    
+    // Extract temperature
+    if (parsed.temp_c !== undefined && parsed.temp_c !== null) {
+      ctx.latestSecondaryData.temp_c = parsed.temp_c;
+    }
+    
+    // Trigger merged telemetry emission
+    emitMergedTelemetry();
+    
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      console.warn("[serial:secondary] JSON parse error:", line.substring(0, 50));
+    }
+  }
+}
+
+function checkAndStartMock() {
+  // Start mock only if both ports are disconnected
+  if (!ctx.mainConnected && !ctx.secondaryConnected && !ctx.isMockMode) {
+    console.log("[serial] Both ports disconnected, starting mock data...");
     startMockDataGeneration();
   }
-  
-  // Retry after 10 seconds
-  scheduleRetry();
+}
+
+let retryTimeout: NodeJS.Timeout | null = null;
+
+export async function startSerialLoop() {
+  if (retryTimeout) {
+    clearTimeout(retryTimeout);
+    retryTimeout = null;
+  }
+
+  const paths = await findSerialPorts();
+  console.log("[serial] Detected paths:", paths);
+
+  // Stop mock if we have any real connection
+  if (paths.main || paths.secondary) {
+    if (ctx.isMockMode) {
+      stopMockDataGeneration();
+    }
+  }
+
+  // Open main port
+  if (paths.main) {
+    const mainPort = await openPort(paths.main, "main", handleMainData);
+    if (mainPort) {
+      ctx.serialPortMain = mainPort;
+      ctx.serialPort = mainPort; // Legacy compatibility
+      ctx.mainConnected = true;
+    }
+  } else {
+    console.warn("[serial] No main Arduino port found");
+  }
+
+  // Open secondary port
+  if (paths.secondary) {
+    const secondaryPort = await openPort(paths.secondary, "secondary", handleSecondaryData);
+    if (secondaryPort) {
+      ctx.serialPortSecondary = secondaryPort;
+      ctx.secondaryConnected = true;
+    }
+  } else {
+    console.warn("[serial] No secondary Arduino port found");
+  }
+
+  emitSerialStatus();
+
+  // Start mock if no ports connected
+  if (!ctx.mainConnected && !ctx.secondaryConnected) {
+    checkAndStartMock();
+  }
+
+  // Schedule retry if either port failed
+  if (!ctx.mainConnected || !ctx.secondaryConnected) {
+    scheduleRetry();
+  }
 }
 
 export function scheduleRetry() {
-  if (serialRetryTimeout) return;
+  if (retryTimeout) return;
   
   console.log("[serial] Will retry connection in 10 seconds...");
-  serialRetryTimeout = setTimeout(() => {
-    serialRetryTimeout = null;
+  retryTimeout = setTimeout(() => {
+    retryTimeout = null;
     startSerialLoop();
   }, 10000);
 }

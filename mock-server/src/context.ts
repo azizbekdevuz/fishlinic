@@ -7,6 +7,14 @@ import { appendTelemetry } from "./storage";
 
 export const MAX_BUFFER_SIZE = 200;
 
+// Partial data from each Arduino
+export type PartialTelemetry = {
+  pH?: number;
+  do_mg_l?: number;
+  rtc?: string;
+  temp_c?: number;
+};
+
 export const ctx: {
   app: express.Express | null;
   server: http.Server | null;
@@ -14,6 +22,16 @@ export const ctx: {
   latestTelemetry: Telemetry | null;
   telemetryBuffer: Telemetry[];
   isMockMode: boolean;
+  // Main Arduino (pH, DO, RTC)
+  serialPortMain: SerialPort | null;
+  mainConnected: boolean;
+  // Secondary Arduino (temp, servo)
+  serialPortSecondary: SerialPort | null;
+  secondaryConnected: boolean;
+  // Latest partial data from each Arduino for merging
+  latestMainData: PartialTelemetry;
+  latestSecondaryData: PartialTelemetry;
+  // Legacy compatibility
   serialPort: SerialPort | null;
 } = {
   app: null,
@@ -22,8 +40,28 @@ export const ctx: {
   latestTelemetry: null,
   telemetryBuffer: [],
   isMockMode: false,
-  serialPort: null,
+  serialPortMain: null,
+  mainConnected: false,
+  serialPortSecondary: null,
+  secondaryConnected: false,
+  latestMainData: {},
+  latestSecondaryData: {},
+  serialPort: null, // Legacy - points to main
 };
+
+// Convert NaN values to null for JSON serialization and database storage
+function sanitizeForJson(t: Telemetry): Record<string, unknown> {
+  return {
+    timestamp: t.timestamp,
+    pH: Number.isFinite(t.pH) ? t.pH : null,
+    temp_c: Number.isFinite(t.temp_c) ? t.temp_c : null,
+    do_mg_l: Number.isFinite(t.do_mg_l) ? t.do_mg_l : null,
+    fish_health: t.fish_health !== undefined && Number.isFinite(t.fish_health) ? t.fish_health : undefined,
+    quality_ai: t.quality_ai !== undefined && Number.isFinite(t.quality_ai) ? t.quality_ai : undefined,
+    status_ai: t.status_ai,
+    rtc: t.rtc,
+  };
+}
 
 // Save telemetry to database via API (optional - only if Next.js app is running)
 async function saveTelemetryToDatabase(t: Telemetry) {
@@ -31,6 +69,12 @@ async function saveTelemetryToDatabase(t: Telemetry) {
   const dbEnabled = process.env.ENABLE_DB_SAVE !== 'false';
   if (!dbEnabled) {
     return; // Skip database save if disabled
+  }
+
+  // Don't save if both pH and DO are missing (need at least pH or DO for meaningful record)
+  const sanitized = sanitizeForJson(t);
+  if (sanitized.pH === null && sanitized.do_mg_l === null) {
+    return; // Skip - only temperature data, not worth saving alone
   }
 
   try {
@@ -43,7 +87,7 @@ async function saveTelemetryToDatabase(t: Telemetry) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(t),
+      body: JSON.stringify(sanitized),
       signal: controller.signal as AbortSignal
     });
 

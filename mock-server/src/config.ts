@@ -4,7 +4,12 @@ import path from "path";
 dotenv.config();
 
 export const PORT = Number(process.env.PORT) || 4000;
-export const SERIAL_PATH = process.env.SERIAL_PATH || "auto";
+
+// Dual Arduino configuration
+// SERIAL_PATH_MAIN: Main Arduino (pH, DO, RTC) - typically COM3
+// SERIAL_PATH_SECONDARY: Secondary Arduino (temp, servo) - typically COM4
+export const SERIAL_PATH_MAIN = process.env.SERIAL_PATH_MAIN || process.env.SERIAL_PATH || "auto";
+export const SERIAL_PATH_SECONDARY = process.env.SERIAL_PATH_SECONDARY || "auto";
 export const SERIAL_BAUD = Number(process.env.SERIAL_BAUD || 9600);
 export const AI_BASE_URL = process.env.AI_BASE_URL || "http://localhost:8000";
 

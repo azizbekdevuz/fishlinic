@@ -24,10 +24,15 @@ function filePathForDate(d: Date) {
 export function appendTelemetry(t: Telemetry) {
   const ts = new Date(t.timestamp);
   const fp = filePathForDate(ts);
+  // Convert NaN values to null for proper JSON serialization
   const normalized = {
     ...t,
-    temp_c: Number.isFinite(t.temp_c) ? t.temp_c : (null as unknown as number),
-  } as Telemetry & { temp_c: number | null };
+    pH: Number.isFinite(t.pH) ? t.pH : null,
+    do_mg_l: Number.isFinite(t.do_mg_l) ? t.do_mg_l : null,
+    temp_c: Number.isFinite(t.temp_c) ? t.temp_c : null,
+    fish_health: t.fish_health !== undefined && Number.isFinite(t.fish_health) ? t.fish_health : undefined,
+    quality_ai: t.quality_ai !== undefined && Number.isFinite(t.quality_ai) ? t.quality_ai : undefined,
+  };
   fs.appendFile(fp, JSON.stringify(normalized) + "\n", { encoding: "utf8" }, () => {});
 }
 

@@ -42,9 +42,11 @@ listSerialPorts().then((ports) => {
 io.on("connection", (socket) => {
   console.log("[socket] Client connected:", socket.id);
   
-  // Send current status immediately
+  // Send current status immediately (dual-port status)
   socket.emit("serial:status", { 
-    status: ctx.serialPort?.isOpen ? "connected" : "disconnected" 
+    status: ctx.mainConnected || ctx.secondaryConnected ? "connected" : "disconnected",
+    main: ctx.mainConnected,
+    secondary: ctx.secondaryConnected
   });
   
   // Send latest telemetry if available
