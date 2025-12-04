@@ -67,7 +67,7 @@ void setup() {
 
   if (! RTC.isrunning())
   {
-      Serial.println("RTC is NOT running!");// reflect the time that your sketch was compiled
+    //   Serial.println("RTC is NOT running!");// reflect the time that your sketch was compiled
       RTC.adjust(DateTime(__DATE__, __TIME__));
   }
 }
@@ -102,7 +102,7 @@ void loop() {
     Serial.print(",\"do_mg_l\":");  Serial.print(do_mgL, 2);
     Serial.print(",\"temp_c\":");   // if no temp sensor, print null
     if (isnan(TEMP_C)) Serial.print("null"); else Serial.print(TEMP_C, 1);
-    // Serial.print(",\"rtc\":"); Serial.print(date); // uncomment this to print the date and time (commented to keep json compatible with mock-server reading)
+    // Serial.print(",\"rtc\":"); Serial.print(date);
     Serial.println("}");
     
     delay(1000); // 1s

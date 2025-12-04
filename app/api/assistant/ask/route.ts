@@ -173,9 +173,14 @@ Remember: You're not a robot giving technical manuals. You're a helpful, knowled
     ];
 
     // Call Ollama API
+    // Note: Don't use credentials: "include" for server-to-server requests
+    // It causes 405 errors with devtunnels and is unnecessary for API calls
     const response = await fetch(`${OLLAMA_URL}/api/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
       body: JSON.stringify({
         model: MODEL_ID,
         messages: messages,
@@ -190,6 +195,8 @@ Remember: You're not a robot giving technical manuals. You're a helpful, knowled
     });
 
     if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      console.error(`Ollama API error: ${response.status} - ${errorText}`);
       throw new Error(`Ollama API error: ${response.status}`);
     }
 
