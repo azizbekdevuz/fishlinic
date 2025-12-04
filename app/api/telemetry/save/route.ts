@@ -41,10 +41,15 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     
-    // Validate required fields
-    if (!body.pH || !body.do_mg_l || !body.timestamp) {
+    // Validate required fields - need timestamp and at least one of pH or do_mg_l
+    // (pH=0 and do_mg_l=0 are valid values, so use explicit null/undefined checks)
+    const hasPH = body.pH !== undefined && body.pH !== null;
+    const hasDO = body.do_mg_l !== undefined && body.do_mg_l !== null;
+    const hasTimestamp = !!body.timestamp;
+    
+    if (!hasTimestamp || (!hasPH && !hasDO)) {
       return NextResponse.json(
-        { error: "Missing required fields: pH, do_mg_l, timestamp" },
+        { error: "Missing required fields: timestamp and at least one of pH or do_mg_l" },
         { status: 400 }
       );
     }
@@ -52,20 +57,20 @@ export async function POST(request: NextRequest) {
     // Handle single telemetry record or array
     const telemetryData = Array.isArray(body) ? body : [body];
     
-    // Validate and prepare data for database
+    // Validate and prepare data for database - require at least one of pH or DO
     const validRecords = telemetryData
       .filter((record: Telemetry) => {
-        return record.pH !== undefined && 
-               record.do_mg_l !== undefined && 
-               record.timestamp;
+        const hasPH = record.pH !== undefined && record.pH !== null;
+        const hasDO = record.do_mg_l !== undefined && record.do_mg_l !== null;
+        return record.timestamp && (hasPH || hasDO);
       })
       .map((record: Telemetry) => ({
         timestamp: new Date(record.timestamp),
-        pH: parseFloat(record?.pH?.toString() ?? '0'),
-        temp_c: record?.temp_c ? parseFloat(record?.temp_c?.toString() ?? '0') : null,
-        do_mg_l: parseFloat(record?.do_mg_l?.toString() ?? '0'),
-        fish_health: record?.fish_health ? parseFloat(record?.fish_health?.toString() ?? '0') : null,
-        quality_ai: record?.quality_ai ? parseFloat(record?.quality_ai?.toString() ?? '0') : null,
+        pH: record.pH != null ? parseFloat(record.pH.toString()) : 0, // Default 0 if missing
+        temp_c: record.temp_c != null ? parseFloat(record.temp_c.toString()) : null,
+        do_mg_l: record.do_mg_l != null ? parseFloat(record.do_mg_l.toString()) : 0, // Default 0 if missing
+        fish_health: record.fish_health != null ? parseFloat(record.fish_health.toString()) : null,
+        quality_ai: record.quality_ai != null ? parseFloat(record.quality_ai.toString()) : null,
         status_ai: record.status_ai || null,
         userId: record.userId || null // Optional user association
       }));
