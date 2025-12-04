@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/app/lib/auth";
 import { getAssistantState } from "@/app/lib/assistant-state";
 
-const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
+// Remove trailing slash to prevent double-slash in URL construction
+const OLLAMA_URL = (process.env.OLLAMA_URL || "http://localhost:11434").replace(/\/+$/, "");
 const MODEL_ID = process.env.ASSISTANT_MODEL || "qwen2.5:3b";
 const TELEMETRY_BASE_URL = process.env.NEXT_PUBLIC_WS_URL?.replace(/\/$/, "") || "http://localhost:4000";
 
