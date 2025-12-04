@@ -173,30 +173,36 @@ Remember: You're not a robot giving technical manuals. You're a helpful, knowled
     ];
 
     // Call Ollama API
-    // Note: Don't use credentials: "include" for server-to-server requests
-    // It causes 405 errors with devtunnels and is unnecessary for API calls
-    const response = await fetch(`${OLLAMA_URL}/api/chat`, {
+    // Note: Don't use credentials or redirect: "follow" for devtunnel compatibility
+    const ollamaEndpoint = `${OLLAMA_URL}/api/chat`;
+    console.log(`[Ollama] Calling: ${ollamaEndpoint}`);
+    
+    const response = await fetch(ollamaEndpoint, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "User-Agent": "Fishlinic/1.0"
       },
       body: JSON.stringify({
         model: MODEL_ID,
         messages: messages,
         stream: false,
         options: {
-          temperature: 0.8, // Higher temperature for more natural, varied responses
-          top_p: 0.9, // Nucleus sampling for better quality
-          top_k: 40, // Top-k sampling
+          temperature: 0.8,
+          top_p: 0.9,
+          top_k: 40,
         }
       }),
-      signal: AbortSignal.timeout(60000) // 60 second timeout for longer responses
+      redirect: "error", // Don't follow redirects - they can convert POST to GET
+      signal: AbortSignal.timeout(60000)
     });
+
+    console.log(`[Ollama] Response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "Unknown error");
-      console.error(`Ollama API error: ${response.status} - ${errorText}`);
+      console.error(`[Ollama] API error: ${response.status} - ${errorText}`);
       throw new Error(`Ollama API error: ${response.status}`);
     }
 
