@@ -7,7 +7,7 @@ import { getToastFromUrl } from "@/app/lib/toast-server";
 import { 
   Bot, 
   Camera, 
-  CameraOff, 
+  ExternalLink, 
   Send, 
   Volume2, 
   User, 
@@ -18,6 +18,7 @@ import {
   Heart,
   Lightbulb
 } from "lucide-react";
+import Link from "next/link";
 
 type Message = {
   id: string;
@@ -42,7 +43,6 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 function VAssistantContent() {
   const [initiated, setInitiated] = useState(false);
-  const [cameraRunning, setCameraRunning] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -70,7 +70,6 @@ function VAssistantContent() {
         "/assistant/status"
       );
       setInitiated(s.initiated);
-      setCameraRunning(s.camera_running);
     } catch {
       // Silently fail - status will update on next poll
     }
@@ -188,49 +187,8 @@ function VAssistantContent() {
     }
   }
 
-  async function onCameraOpen() {
-    setBusy(true);
-    setError(null);
-    try {
-      // Try to access camera via browser API
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      
-      // If successful, update state via API
-      await api<{ ok: boolean }>("/camera/open", { method: "POST" });
-      setCameraRunning(true);
-      
-      // Store stream for cleanup
-      (window as Window & { cameraStream?: MediaStream }).cameraStream = stream;
-    } catch (err) {
-      console.error("Camera error:", err);
-      setError("Camera access denied or unavailable. Please check permissions.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onCameraClose() {
-    setBusy(true);
-    setError(null);
-    try {
-      // Stop camera stream if exists
-      const windowWithStream = window as Window & { cameraStream?: MediaStream };
-      const stream = windowWithStream.cameraStream;
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        delete windowWithStream.cameraStream;
-      }
-      
-      await api<{ ok: boolean }>("/camera/close", { method: "POST" });
-      setCameraRunning(false);
-    } catch {
-      setError("Camera failed to close");
-    } finally {
-      setBusy(false);
-    }
-  }
+  // Camera URL from environment
+  const cameraUrl = process.env.NEXT_PUBLIC_CAM_URL;
 
   const quickActions = [
     { label: "Water Report", prompt: "Give me a detailed water quality report", icon: BarChart3 },
@@ -258,10 +216,6 @@ function VAssistantContent() {
               <div className={`badge ${initiated ? "status-good" : "status-neutral"}`}>
                 <div className={`w-2 h-2 rounded-full ${initiated ? "bg-green-400 animate-pulse" : "bg-gray-400"}`}></div>
                 Assistant: {initiated ? "Ready" : "Idle"}
-              </div>
-              <div className={`badge ${cameraRunning ? "status-good" : "status-neutral"}`}>
-                <div className={`w-2 h-2 rounded-full ${cameraRunning ? "bg-green-400 animate-pulse" : "bg-gray-400"}`}></div>
-                Camera: {cameraRunning ? "Active" : "Inactive"}
               </div>
             </div>
           </div>
@@ -305,34 +259,36 @@ function VAssistantContent() {
               </div>
             </div>
 
-            {/* Camera Controls */}
+            {/* Camera Access */}
             <div className="card-glass animate-slide-in" style={{ animationDelay: "100ms" }}>
               <h3 className="text-lg font-semibold mb-4" style={{ color: "rgb(var(--text-primary))" }}>
-                Camera System
+                Live Camera
               </h3>
               
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  className="btn btn-secondary btn-sm"
-                  onClick={onCameraOpen}
-                  disabled={busy || cameraRunning}
-                  title="Opens camera window on host system"
+              <div className="space-y-3">
+                <Link
+                  href="/dashboard"
+                  className="btn btn-secondary btn-sm w-full"
                 >
                   <Camera className="w-4 h-4" />
-                  Open
-                </button>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={onCameraClose}
-                  disabled={busy || !cameraRunning}
-                >
-                  <CameraOff className="w-4 h-4" />
-                  Close
-                </button>
+                  View in Dashboard
+                </Link>
+                
+                {cameraUrl && (
+                  <a
+                    href={cameraUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-ghost btn-sm w-full"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Open Direct Stream
+                  </a>
+                )}
               </div>
               
               <p className="text-xs mt-3" style={{ color: "rgb(var(--text-muted))" }}>
-                Camera access via browser. Grant permissions when prompted.
+                {cameraUrl ? "Live aquarium camera feed available" : "Camera URL not configured"}
               </p>
             </div>
 
