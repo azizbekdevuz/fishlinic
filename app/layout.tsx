@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Providers } from "@/app/providers/Providers";
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Providers>
           {children}
         </Providers>
+        <Analytics />
       </body>
     </html>
   );

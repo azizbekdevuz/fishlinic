@@ -28,6 +28,7 @@
     "@prisma/client": "^6.19.0",
     "@serialport/parser-readline": "^13.0.0",
     "@tailwindcss/postcss": "^4.1.16",
+    "@vercel/analytics": "^1.6.1",
     "dotenv": "^17.2.2",
     "echarts": "^5.5.0",
     "echarts-for-react": "^3.0.2",
