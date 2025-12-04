@@ -107,7 +107,9 @@ async function saveTelemetryToDatabase(t: Telemetry) {
     // Only log non-timeout errors (connection refused, etc.) on first occurrence
     // to avoid spam when Next.js is intentionally not running
     const errorKey = 'db_connection_warned';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(global as any)[errorKey]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global as any)[errorKey] = true;
       console.warn('[db] Database save unavailable (Next.js app not running). Data saved to files only.');
     }

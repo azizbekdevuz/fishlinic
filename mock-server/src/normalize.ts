@@ -4,6 +4,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function pickNumber(obj: Record<string, unknown>, keys: readonly string[]): number | undefined {
   for (const k of keys) {
     const val = obj[k];

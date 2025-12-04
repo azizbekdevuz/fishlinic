@@ -1,11 +1,10 @@
 import { SerialPort } from "serialport";
 import { ReadlineParser } from "@serialport/parser-readline";
-import { ctx, pushTelemetry, PartialTelemetry } from "./context";
+import { ctx, pushTelemetry } from "./context";
 import { SERIAL_BAUD, SERIAL_PATH_MAIN, SERIAL_PATH_SECONDARY } from "./config";
 import { normalize } from "./normalize";
 import { enrichWithAI } from "./ai";
 import { startMockDataGeneration, stopMockDataGeneration } from "./mockData";
-import { Telemetry } from "./types";
 
 export async function listSerialPorts() {
   try {
