@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { UserMenuDropdown } from "@/app/components/UserMenuDropdown";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useEffect, useState } from "react";
-import { Home, BarChart3, Bot, Menu, X, LogIn, LogOut, User, CheckCircle, AlertCircle, Settings, Shield, HelpCircle, Info } from "lucide-react";
+import { Home, BarChart3, Bot, Menu, X, LogIn, LogOut, User, CheckCircle, AlertCircle, Settings, Shield, HelpCircle, Info, Users } from "lucide-react";
 
 const links = [
   { href: "/", label: "Home", icon: Home },
@@ -214,6 +214,13 @@ export function SiteNav() {
                     >
                       <Info className="w-5 h-5" style={{ color: "rgb(var(--text-primary))" }} />
                       <span className="text-sm" style={{ color: "rgb(var(--text-primary))" }}>About</span>
+                    </Link>
+                    <Link
+                      href="/our-team"
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition-colors"
+                    >
+                      <Users className="w-5 h-5" style={{ color: "rgb(var(--text-primary))" }} />
+                      <span className="text-sm" style={{ color: "rgb(var(--text-primary))" }}>Our Team</span>
                     </Link>
                   </div>
 

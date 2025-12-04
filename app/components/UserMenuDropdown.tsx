@@ -12,7 +12,8 @@ import {
   LogOut, 
   ChevronDown,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Users
 } from "lucide-react";
 
 export function UserMenuDropdown() {
@@ -72,6 +73,12 @@ export function UserMenuDropdown() {
       icon: Info,
       label: "About",
       description: "Project information and credits"
+    },
+    {
+      href: "/our-team",
+      icon: Users,
+      label: "Our Team",
+      description: "Meet the team behind the project"
     }
   ];
 
