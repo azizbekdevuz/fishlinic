@@ -27,6 +27,8 @@ model User {
   // Relations
   telemetry Telemetry[]
   verificationAttempts VerificationAttempt[]
+  feederSchedules FeederSchedule[]
+  feedLogs FeedLog[]
 
   @@map("users")
 }
@@ -76,4 +78,40 @@ model Chat_History {
   message   String // JSON string containing chat messages
   
   @@map("chat_history")
+}
+
+model FeederSchedule {
+  id        String   @id @default(uuid())
+  name      String?  // Optional name like "Morning", "Evening"
+  hour      Int      // 0-23
+  minute    Int      // 0-59
+  duration  Float    @default(2.0) // Duration in seconds for servo oscillation
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // User relation - schedules belong to a user
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([hour, minute])
+  @@index([userId])
+  @@map("feeder_schedules")
+}
+
+model FeedLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  source    String   // "manual", "scheduler", "api"
+  duration  Float?   // Duration in seconds
+  success   Boolean
+  message   String?  // Error message if failed
+  
+  // User relation - feed logs belong to a user
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([timestamp])
+  @@index([userId])
+  @@map("feed_logs")
 }
