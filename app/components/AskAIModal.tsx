@@ -190,7 +190,7 @@ function generateAIResponse(question: string, latest?: Telemetry): string {
     } else if (status === "average") {
       return `The water quality needs ATTENTION. Some parameters are outside optimal ranges:\n\n• pH: ${latest.pH.toFixed(2)} (target: 6.5-8.0)\n• Temperature: ${latest.temp_c.toFixed(1)}°C (target: 20-30°C)\n• Dissolved Oxygen: ${latest.do_mg_l.toFixed(2)} mg/L (target: ≥5.0 mg/L)\n\nRecommendations:\n- Check filtration system\n- Consider partial water change\n- Monitor fish behavior closely\n- Review feeding schedule`;
     } else {
-      return `⚠️ CRITICAL ALERT: Water quality requires IMMEDIATE action!\n\nCurrent readings:\n• pH: ${latest.pH.toFixed(2)}\n• Temperature: ${latest.temp_c.toFixed(1)}°C\n• Dissolved Oxygen: ${latest.do_mg_l.toFixed(2)} mg/L\n\nImmediate actions:\n1. Check all equipment functionality\n2. Perform emergency water correction\n3. Consider emergency protocols\n4. Monitor fish closely for stress signs`;
+      return `CRITICAL ALERT: Water quality requires IMMEDIATE action!\n\nCurrent readings:\n• pH: ${latest.pH.toFixed(2)}\n• Temperature: ${latest.temp_c.toFixed(1)}°C\n• Dissolved Oxygen: ${latest.do_mg_l.toFixed(2)} mg/L\n\nImmediate actions:\n1. Check all equipment functionality\n2. Perform emergency water correction\n3. Consider emergency protocols\n4. Monitor fish closely for stress signs`;
     }
   }
 

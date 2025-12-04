@@ -215,7 +215,7 @@ export function SimpleGame() {
       ctx.fillText(`Score: ${score}${over ? " — Game over" : ""}`, 10, 18);
       ctx.fillStyle = secondary;
       ctx.font = "11px system-ui, -apple-system, Segoe UI, Roboto";
-      ctx.fillText("Controls: Arrows on keyboard (⬆️ ⬇️ ⬅️ ➡️)", 10, 36);
+      ctx.fillText("Controls: Arrow keys (Up, Down, Left, Right)", 10, 36);
       if (over) {
         ctx.fillText("Press R or tap canvas to restart", 10, 52);
       }

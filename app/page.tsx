@@ -12,8 +12,13 @@ import {
   Clock,
   Zap,
   Brain,
-  Rocket
+  Rocket,
+  Book,
+  Palette,
+  Code,
+  Plug
 } from "lucide-react";
+import { FaAtom } from "react-icons/fa";
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
@@ -200,24 +205,27 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
             {[
-              { name: "Next.js", icon: "⚛️" },
-              { name: "TypeScript", icon: "📘" },
-              { name: "Tailwind CSS", icon: "🎨" },
-              { name: "Python", icon: "🐍" },
-              { name: "AI/ML", icon: "🤖" },
-              { name: "WebSocket", icon: "🔌" }
-            ].map((tech, index) => (
-              <div 
-                key={tech.name}
-                className="glass p-6 rounded-xl text-center hover:bg-white/10 transition-all duration-200 animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="text-3xl mb-3">{tech.icon}</div>
-                <div className="text-sm font-medium" style={{ color: "rgb(var(--text-primary))" }}>
-                  {tech.name}
+              { name: "Next.js", icon: FaAtom },
+              { name: "TypeScript", icon: Book },
+              { name: "Tailwind CSS", icon: Palette },
+              { name: "Python", icon: Code },
+              { name: "AI/ML", icon: Bot },
+              { name: "WebSocket", icon: Plug }
+            ].map((tech, index) => {
+              const IconComponent = tech.icon;
+              return (
+                <div 
+                  key={tech.name}
+                  className="glass p-6 rounded-xl text-center hover:bg-white/10 transition-all duration-200 animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <IconComponent className="w-8 h-8 mx-auto mb-3" style={{ color: "rgb(var(--primary))" }} />
+                  <div className="text-sm font-medium" style={{ color: "rgb(var(--text-primary))" }}>
+                    {tech.name}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

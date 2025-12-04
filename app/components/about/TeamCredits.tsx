@@ -5,8 +5,12 @@ import {
   Heart, 
   Github,
   Mail,
-  GraduationCap
+  GraduationCap,
+  FileText,
+  Timer,
+  Plug
 } from "lucide-react";
+import { FaPuzzlePiece } from "react-icons/fa";
 
 export function TeamCredits() {
   const teamMembers = [
@@ -51,10 +55,10 @@ export function TeamCredits() {
   ];
 
   const projectStats = [
-    { label: "Lines of Code", value: "10,000+", icon: "📝" },
-    { label: "Components", value: "50+", icon: "🧩" },
-    { label: "API Endpoints", value: "25+", icon: "🔌" },
-    { label: "Development Time", value: "6+ months", icon: "⏱️" }
+    { label: "Lines of Code", value: "10,000+", icon: FileText },
+    { label: "Components", value: "50+", icon: FaPuzzlePiece },
+    { label: "API Endpoints", value: "25+", icon: Plug },
+    { label: "Development Time", value: "6+ months", icon: Timer }
   ];
 
   return (
@@ -115,13 +119,16 @@ export function TeamCredits() {
         </h3>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {projectStats.map((stat) => (
-            <div key={stat.label} className="p-4 rounded-lg bg-white/5 border border-white/10 text-center">
-              <div className="text-2xl mb-2">{stat.icon}</div>
-              <div className="text-2xl font-bold text-blue-400 mb-1">{stat.value}</div>
-              <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>{stat.label}</div>
-            </div>
-          ))}
+          {projectStats.map((stat) => {
+            const IconComponent = stat.icon;
+            return (
+              <div key={stat.label} className="p-4 rounded-lg bg-white/5 border border-white/10 text-center">
+                <IconComponent className="w-8 h-8 mx-auto mb-2 text-blue-400" />
+                <div className="text-2xl font-bold text-blue-400 mb-1">{stat.value}</div>
+                <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>{stat.label}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

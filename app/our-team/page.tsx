@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback, Suspense } from "react";
-import { Users, Sparkles, GraduationCap } from "lucide-react";
+import { Users, Sparkles, GraduationCap, Calendar, Laptop, Heart } from "lucide-react";
+import { FaCoffee } from "react-icons/fa";
 import { TeamMemberCard, TeamMemberModal } from "@/app/lib/types/our-team";
 import type { TeamMember } from "@/app/lib/types/our-team";
 import { teamMembers } from "@/app/our-team/data/teamData";
@@ -78,28 +79,31 @@ function TeamPageContent() {
         {/* Team Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12 animate-fade-in" style={{ animationDelay: "100ms" }}>
           {[
-            { label: "Team Members", value: "5", icon: "👥" },
-            { label: "Months of Development", value: "6+", icon: "📅" },
-            { label: "Lines of Code", value: "15K+", icon: "💻" },
-            { label: "Cups of Coffee", value: "∞", icon: "☕" }
-          ].map((stat) => (
-            <div 
-              key={stat.label}
-              className="p-4 rounded-xl text-center transition-all duration-300 hover:scale-105"
-              style={{
-                background: "rgba(var(--surface-glass))",
-                border: "1px solid var(--border)"
-              }}
-            >
-              <div className="text-2xl mb-2">{stat.icon}</div>
-              <div className="text-2xl font-bold" style={{ color: "rgb(var(--primary))" }}>
-                {stat.value}
+            { label: "Team Members", value: "5", icon: Users },
+            { label: "Months of Development", value: "6+", icon: Calendar },
+            { label: "Lines of Code", value: "15K+", icon: Laptop },
+            { label: "Cups of Coffee", value: "∞", icon: FaCoffee }
+          ].map((stat) => {
+            const IconComponent = stat.icon;
+            return (
+              <div 
+                key={stat.label}
+                className="p-4 rounded-xl text-center transition-all duration-300 hover:scale-105"
+                style={{
+                  background: "rgba(var(--surface-glass))",
+                  border: "1px solid var(--border)"
+                }}
+              >
+                <IconComponent className="w-8 h-8 mx-auto mb-2" style={{ color: "rgb(var(--primary))" }} />
+                <div className="text-2xl font-bold" style={{ color: "rgb(var(--primary))" }}>
+                  {stat.value}
+                </div>
+                <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
+                  {stat.label}
+                </div>
               </div>
-              <div className="text-xs" style={{ color: "rgb(var(--text-muted))" }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Team Grid */}
@@ -161,10 +165,10 @@ function TeamPageContent() {
         {/* Footer */}
         <footer className="mt-12 text-center">
           <p 
-            className="text-sm"
+            className="text-sm flex items-center justify-center gap-1.5"
             style={{ color: "rgb(var(--text-muted))" }}
           >
-            Built with ❤️ at Sejong University © 2025
+            Built with <Heart className="w-4 h-4 inline" style={{ color: "rgb(var(--danger))" }} /> at Sejong University © 2025
           </p>
         </footer>
       </div>
