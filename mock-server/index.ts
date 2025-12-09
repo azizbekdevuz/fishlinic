@@ -19,22 +19,19 @@ const AI_BASE_URL = process.env.AI_BASE_URL || "http://localhost:8000";
 const app = express();
 const server = http.createServer(app);
 
-// CORS configuration: allow localhost by default; override with ALLOWED_ORIGINS (comma-separated)
-const DEFAULT_ORIGINS = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "https://fishlinic.vercel.app"
-];
-const envOrigins = (process.env.ALLOWED_ORIGINS || "")
+// CORS configuration: allow all origins by default; override with ALLOWED_ORIGINS (comma-separated)
+// Set ALLOWED_ORIGINS="*" for all origins, or specific origins like "http://localhost:3000,https://example.com"
+const envOrigins = (process.env.ALLOWED_ORIGINS || "*")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
-const ALLOWED_ORIGINS = envOrigins.length ? envOrigins : DEFAULT_ORIGINS;
+const ALLOW_ALL = envOrigins.includes("*") || envOrigins.length === 0;
+const ALLOWED_ORIGINS = ALLOW_ALL ? "*" : envOrigins;
 
 const io = new Server(server, {
   cors: {
-    origin: ALLOWED_ORIGINS,
-    methods: ["GET", "POST"],
+    origin: ALLOW_ALL ? true : ALLOWED_ORIGINS,
+    methods: ["GET", "POST", "DELETE"],
   },
   transports: ["websocket"],
 });
@@ -42,11 +39,23 @@ const io = new Server(server, {
 // Basic CORS for REST endpoints (no extra dependency)
 app.use((req, res, next) => {
   const origin = req.headers.origin as string | undefined;
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
+  
+  if (ALLOW_ALL) {
+    // Allow all origins
+    if (origin) {
+      res.header("Access-Control-Allow-Origin", origin);
+    } else {
+      res.header("Access-Control-Allow-Origin", "*");
+    }
+  } else {
+    // Allow specific origins only
+    if (origin && (ALLOWED_ORIGINS as string[]).includes(origin)) {
+      res.header("Access-Control-Allow-Origin", origin);
+    }
   }
+  
   res.header("Vary", "Origin");
-  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.sendStatus(204);
   next();

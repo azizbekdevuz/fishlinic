@@ -275,12 +275,54 @@ fishlinic/
 - `telemetry`: New telemetry data
 - `telemetry:update`: Latest reading update
 - `serial:status`: Hardware connection status
+- `feeder:event`: Feeder operation events (feed logs, schedule triggers)
 
 **Client Integration**:
 - Singleton Socket.IO client
 - Automatic reconnection logic
 - Throttled updates (2s default)
 - Buffer management (200 records)
+
+### 6. Feeder Control System
+
+**Architecture**: Public API with rate limiting and CORS support
+
+**Flow**:
+1. External service (e.g., Python VA) calls Next.js API route (`/api/feeder/*`)
+2. API route applies rate limiting (3/10s, 5/30min, 15/1min)
+3. Request proxied to mock-server (tries Vercel URL first, then localhost)
+4. Mock-server validates request and executes hardware command
+5. Response returned to caller
+6. Authenticated web users' schedules stored with `userId` in database
+
+**Features**:
+- Public API (no authentication required)
+- Rate limiting per IP address
+- CORS support (all origins by default, configurable)
+- Automatic failover (Vercel → localhost)
+- User-specific schedule filtering for authenticated users
+- Hardware status monitoring
+- Scheduled feed execution via cron jobs
+
+**Endpoints**:
+- `POST /api/feeder/feed` - Trigger immediate feed
+- `GET /api/feeder/schedule` - List all schedules
+- `POST /api/feeder/schedule` - Create new schedule
+- `DELETE /api/feeder/schedule/{id}` - Delete schedule
+- `GET /api/feeder/status` - Get system status
+- `GET /api/feeder/feed-status` - Get hardware status
+
+**Rate Limiting**:
+- In-memory store per IP address
+- Three-tier limits: 15/min, 3/10s, 5/30min
+- Automatic cleanup of expired windows
+- Returns `429 Too Many Requests` with `Retry-After` header
+
+**CORS Configuration**:
+- Default: Allow all origins (`*`)
+- Configurable via `ALLOWED_ORIGINS` environment variable
+- Supports comma-separated list of specific origins
+- Applied to both Next.js API routes and mock-server endpoints
 
 ---
 
@@ -534,6 +576,10 @@ Access Granted
 - `OLLAMA_URL`: Ollama service URL
 - `NEXT_PUBLIC_WS_URL`: Socket.IO server URL
 
+**Optional**:
+- `ALLOWED_ORIGINS`: CORS origins (comma-separated, default: "*" for all)
+- `NEXT_PUBLIC_VERCEL_URL`: Vercel deployment URL (for API proxy failover)
+
 ### Data Storage
 
 **PostgreSQL**: 
@@ -559,8 +605,10 @@ Access Granted
 ### API Security
 - Session validation on protected routes
 - Rate limiting on verification endpoints
+- **Feeder API rate limiting**: 3/10s, 5/30min, 15/1min per IP
 - Input validation with type checking
 - SQL injection prevention via Prisma
+- CORS configuration for public APIs (configurable via `ALLOWED_ORIGINS`)
 
 ### Data Security
 - User data isolation (userId filtering)
