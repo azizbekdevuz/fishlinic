@@ -16,9 +16,9 @@ type RateLimitRule = {
 };
 
 const RATE_LIMIT_RULES: RateLimitRule[] = [
-  { key: "1min", maxRequests: 15, windowMs: 60 * 1000 },           // 15 per 1 minute
-  { key: "10sec", maxRequests: 3, windowMs: 10 * 1000 },            // 3 per 10 seconds
-  { key: "30min", maxRequests: 5, windowMs: 30 * 60 * 1000 },      // 5 per 30 minutes
+  { key: "1min", maxRequests: 150, windowMs: 60 * 1000 },           // 15 per 1 minute
+  { key: "10sec", maxRequests: 30, windowMs: 10 * 1000 },            // 3 per 10 seconds
+  { key: "30min", maxRequests: 50, windowMs: 30 * 60 * 1000 },      // 5 per 30 minutes
 ];
 
 // In-memory store: IP -> Map<ruleKey, window>
