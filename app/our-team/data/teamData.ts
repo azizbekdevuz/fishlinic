@@ -5,52 +5,47 @@ export const teamMembers: TeamMember[] = [
     id: "hung",
     studentId: "22013112",
     name: "Tran Dai Viet Hung",
-    role: "Full-Stack Developer",
+    role: "Team Leader & AI SW Developer",
     image: "/our-team/hung.jpg",
-    shortDescription: "Passionate about building scalable web applications and exploring cutting-edge technologies. Dedicated to creating seamless user experiences through clean code and innovative solutions.",
+    shortDescription: "Team leader driving the project vision and technical direction. Combines AI and software development expertise with project management skills to deliver comprehensive solutions.",
     contributions: [
-      "Backend Development",
-      "Database Design",
-      "API Integration",
+      "Project Management",
+      "AI SW Development",
+      "Leadership",
       "System Architecture"
     ],
     detailedContributions: [
-      "Designed and implemented the RESTful API architecture for real-time data communication",
-      "Developed the database schema and optimized queries for efficient telemetry data storage",
-      "Integrated third-party services and ensured smooth data flow between components",
-      "Collaborated on system architecture decisions and scalability planning",
-      "Implemented error handling and logging mechanisms for system reliability"
+      "Led the overall project architecture and technical decision-making",
+      "Trained the AI model for the virtual assistant",
+      "Customzed and trained LLM models to fit the project requirements",
     ],
     links: {
-      github: "https://github.com/",
-      linkedin: "https://linkedin.com/in/",
-      email: "22013112@student.sejong.ac.kr"
+      github: "https://github.com/trandaiviethung2001",
+      linkedin: "https://www.linkedin.com/in/hung-tran-dai-viet-8b6090233/",
+      email: "trandaiviethung2001@gmail.com"
     }
   },
   {
     id: "nomungerel",
     studentId: "22013153",
-    name: "Nomungerel Mijiddorj",
-    role: "Frontend Developer",
+    name: "AI SW Developer",
+    role: "AI Developer | LLM Trainer",
     image: "/our-team/nomungerel.jpg",
-    shortDescription: "Creative frontend developer with a keen eye for design and user experience. Focused on building intuitive interfaces that bridge the gap between functionality and aesthetics.",
+    shortDescription: "AI enthusiast focused on machine learning applications in environmental monitoring. Dedicated to developing intelligent systems that provide actionable insights from sensor data.",
     contributions: [
-      "UI/UX Design",
-      "Frontend Development",
-      "Responsive Design",
-      "Component Library"
+      "Training and customizing LLM models",
+      "Roboflow integration for object detection",
+      "Data processing, analysis, and training"
     ],
     detailedContributions: [
-      "Crafted responsive UI components following modern design principles",
-      "Implemented the dashboard visualization components for data representation",
-      "Designed and developed the theming system supporting dark and light modes",
-      "Created reusable component patterns ensuring consistency across the application",
-      "Conducted user experience testing and iterative improvements"
+      "Trained and customized LLM models for the virtual assistant",
+      "Integrated Roboflow for fish detection and image processing",
+      "Processed and analyzed sensor data for water quality analysis"
     ],
     links: {
-      github: "https://github.com/",
-      linkedin: "https://linkedin.com/in/",
-      email: "22013153@student.sejong.ac.kr"
+      github: "https://github.com/nomungerelm",
+      linkedin: "https://linkedin.com/in/nomungerel-mijiddorj-25369a301/",
+      email: "nomun0225@gmail.com"
     }
   },
   {
@@ -63,20 +58,17 @@ export const teamMembers: TeamMember[] = [
     contributions: [
       "Arduino Development",
       "Sensor Integration",
-      "Hardware Setup",
-      "Serial Communication"
+      "Hardware Setup"
     ],
     detailedContributions: [
       "Developed Arduino firmware for pH, dissolved oxygen, and temperature sensors",
       "Implemented serial communication protocol between hardware and software",
-      "Designed the dual-Arduino architecture for efficient data collection",
-      "Calibrated and tested sensors for accurate water quality measurements",
-      "Created the servo-based fish feeding mechanism and control system"
+      "Designed the dual-Arduino architecture for efficient data collection"
     ],
     links: {
-      github: "https://github.com/",
-      linkedin: "https://linkedin.com/in/",
-      email: "22013133@student.sejong.ac.kr"
+      github: "https://github.com/theeduazizjon-cell",
+      linkedin: "https://www.linkedin.com/in/azizjon-kamoliddinov-374219350/",
+      email: "theeduazizjon@gmail.com"
     }
   },
   {
@@ -93,43 +85,38 @@ export const teamMembers: TeamMember[] = [
       "Predictive Analytics"
     ],
     detailedContributions: [
-      "Integrated Ollama LLM for the AI-powered virtual assistant (Veronica)",
       "Developed the AI service for water quality analysis and predictions",
       "Implemented fish health scoring algorithms based on environmental parameters",
-      "Created data normalization and preprocessing pipelines",
-      "Designed the prompt engineering for contextual AI responses"
+      "Created data normalization and preprocessing pipelines"
     ],
     links: {
-      github: "https://github.com/",
-      linkedin: "https://linkedin.com/in/",
-      email: "21013414@student.sejong.ac.kr"
+      github: "https://github.com/PTRK11",
+      linkedin: "https://www.linkedin.com/in/phyo-thiri-khaing-27a145222/",
+      email: "phyothirikhainguit11@gmail.com"
     }
   },
   {
     id: "azizbek",
     studentId: "22013143",
     name: "Azizbek Arzikulov",
-    role: "Project Lead & Full-Stack Developer",
+    role: "Full-Stack Developer",
     image: "/our-team/azizbek.jpg",
-    shortDescription: "Team leader driving the project vision and technical direction. Combines full-stack expertise with project management skills to deliver comprehensive solutions.",
+    shortDescription: "Full-stack developer with a passion for building scalable and efficient web applications. Dedicated to creating seamless user experiences through clean code and innovative solutions.",
     contributions: [
-      "Project Management",
       "Full-Stack Development",
       "System Integration",
-      "Code Review"
+      "Schema Design", 
+      "Web Application Development",
     ],
     detailedContributions: [
-      "Led the overall project architecture and technical decision-making",
-      "Developed core features including authentication, real-time data, and dashboard",
-      "Implemented the mock-server bridge for hardware-software communication",
-      "Coordinated team efforts and maintained code quality standards",
-      "Managed deployment pipeline and production environment setup",
-      "Integrated all system components into a cohesive application"
+      "Designed and implemented the PostgreSQL database schema for telemetry data",
+      "Developed the Next.js web application with authentication, dashboard, and real-time data visualization",
+      "Integrated Socket.IO for real-time communication between client and server"
     ],
     links: {
-      github: "https://github.com/",
-      linkedin: "https://linkedin.com/in/",
-      email: "22013143@student.sejong.ac.kr"
+      github: "https://github.com/azizbekdevuz",
+      linkedin: "https://www.linkedin.com/in/azizbek-arzikulov",
+      email: "azizbek.dev.ac@gmail.com"
     }
   }
 ];
