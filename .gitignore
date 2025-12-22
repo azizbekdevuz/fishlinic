@@ -53,3 +53,6 @@ ENV/
 *.swp
 *.swo
 /generated/prisma
+
+# Video script
+VIDEO_SCRIPT.md
